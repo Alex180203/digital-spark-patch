@@ -21,7 +21,7 @@ export function BottomNav() {
     { to: "/clerk", icon: Building2, label: t.common.roles.clerk },
     { to: "/ledger", icon: Hash, label: t.nav.ledger },
     { to: "/profile", icon: User, label: t.nav.profile },
-  ];
+  ] as Array<{ to: string; icon: typeof Home; label: string; badge?: number }>;
 
   const links = isClerk ? clerkLinks : citizenLinks;
 
