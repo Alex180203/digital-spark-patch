@@ -19,6 +19,7 @@ import { ClerkScreen } from "./screens/ClerkScreen";
 import { DeclaratiiScreen } from "./screens/DeclaratiiScreen";
 import { CalendarScreen } from "./screens/CalendarScreen";
 import { RulesScreen } from "./screens/RulesScreen";
+import { TaxesScreen } from "./screens/TaxesScreen";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { state } = useApp();
