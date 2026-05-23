@@ -243,7 +243,7 @@ const DOC_TYPE_OPTIONS = [
 ];
 
 function AddDocumentModal({ onClose }: { onClose: () => void }) {
-  const { dispatch, addLedgerEvent } = useApp();
+  const { state, dispatch, addLedgerEvent } = useApp();
   const t = useTranslations();
   const { showToast } = useToast();
 
@@ -253,6 +253,10 @@ function AddDocumentModal({ onClose }: { onClose: () => void }) {
   const [expiryDate, setExpiryDate] = useState("");
 
   function handleAdd() {
+    if (state.currentRole !== "citizen") {
+      showToast("Doar cetățeanul poate adăuga documente.", "error");
+      return;
+    }
     const typeInfo = DOC_TYPE_OPTIONS.find((d) => d.key === docTypeKey) ?? DOC_TYPE_OPTIONS[0];
     const days = expiryDate
       ? Math.floor((new Date(expiryDate).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000)
