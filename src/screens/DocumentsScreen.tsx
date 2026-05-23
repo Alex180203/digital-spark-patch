@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileText, Car, HeartPulse, Shield, BookOpen, CreditCard,
-  ChevronRight, AlertTriangle, CheckCircle, Clock, Plus, X as XIcon
+  ChevronRight, AlertTriangle, CheckCircle, Clock, Plus, X as XIcon,
+  Trash2, Eye, EyeOff, MapPin, ExternalLink,
 } from "lucide-react";
 import { useApp, useTranslations } from "../context/AppContext";
 import { Card, CardContent } from "../components/lazi-ui/Card";
@@ -81,7 +82,17 @@ function DocumentCard({ doc, onOpen }: { doc: Document; onOpen: (doc: Document) 
   );
 }
 
-function DocumentDetail({ doc, onClose }: { doc: Document; onClose: () => void }) {
+function unmaskedData(doc: Document): string {
+  // Simulated full data reveal (in a real app would require ROeID re-auth).
+  if (doc.personalDataMasked.includes("***")) return doc.personalDataMasked.replace(/\*+/g, "1985-04-12");
+  return `${doc.personalDataMasked} · CNP 1850412080011 · Seria KX nr. 442180`;
+}
+
+function institutionMapUrl(institution: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(institution + " Cluj-Napoca")}`;
+}
+
+function DocumentDetail({ doc, onClose, onDelete }: { doc: Document; onClose: () => void; onDelete: (d: Document) => void }) {
   const { state } = useApp();
   const t = useTranslations();
   const navigate = useNavigate();
@@ -90,6 +101,8 @@ function DocumentDetail({ doc, onClose }: { doc: Document; onClose: () => void }
   const isCitizen = state.currentRole === "citizen";
   const isExpired = doc.daysUntilExpiry !== undefined && doc.daysUntilExpiry < 0;
   const showRenewAction = doc.status === "expired" || doc.status === "urgent";
+  const [showFullData, setShowFullData] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
     <div
@@ -124,29 +137,58 @@ function DocumentDetail({ doc, onClose }: { doc: Document; onClose: () => void }
         </div>
 
         <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
-          {([
-            { label: t.documents.maskedData, value: doc.personalDataMasked },
-            { label: t.documents.institution, value: doc.institution },
-            doc.expiryDate ? { label: t.documents.validUntil, value: doc.expiryDate } : null,
-            doc.daysUntilExpiry !== undefined ? {
-              label: t.documents.daysLeft,
-              value: expiryLabel(doc, t),
-              highlight: isExpired,
-            } : null,
-          ] as Array<{ label: string; value: string; highlight?: boolean } | null>)
-            .filter((x): x is { label: string; value: string; highlight?: boolean } => x !== null)
-            .map(({ label, value, highlight }) => (
-              <div key={label} className="flex justify-between items-start gap-4">
-                <span className="text-xs text-slate-500 flex-shrink-0">{label}</span>
-                <span className={`text-xs font-medium text-right ${highlight ? "text-red-600" : "text-slate-800"}`}>{value}</span>
+          <div className="flex justify-between items-start gap-4">
+            <span className="text-xs text-slate-500 flex-shrink-0">{t.documents.maskedData}</span>
+            <div className="text-right">
+              <div className="text-xs font-medium text-slate-800">
+                {showFullData ? unmaskedData(doc) : doc.personalDataMasked}
               </div>
-            ))}
+              <button
+                onClick={() => setShowFullData((v) => !v)}
+                className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-700"
+              >
+                {showFullData ? <><EyeOff className="w-3 h-3" /> Ascunde</> : <><Eye className="w-3 h-3" /> Arată datele complete</>}
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-between items-start gap-4">
+            <span className="text-xs text-slate-500 flex-shrink-0">{t.documents.institution}</span>
+            <span className="text-xs font-medium text-right text-slate-800">{doc.institution}</span>
+          </div>
+          {doc.expiryDate && (
+            <div className="flex justify-between items-start gap-4">
+              <span className="text-xs text-slate-500 flex-shrink-0">{t.documents.validUntil}</span>
+              <span className="text-xs font-medium text-right text-slate-800">{doc.expiryDate}</span>
+            </div>
+          )}
+          {doc.daysUntilExpiry !== undefined && (
+            <div className="flex justify-between items-start gap-4">
+              <span className="text-xs text-slate-500 flex-shrink-0">{t.documents.daysLeft}</span>
+              <span className={`text-xs font-medium text-right ${isExpired ? "text-red-600" : "text-slate-800"}`}>{expiryLabel(doc, t)}</span>
+            </div>
+          )}
         </div>
 
         <div className={`border rounded-xl p-3 ${isExpired ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"}`}>
           <p className={`text-xs font-medium ${isExpired ? "text-red-700" : "text-blue-700"}`}>{t.documents.action}</p>
           <p className={`text-xs mt-1 ${isExpired ? "text-red-600" : "text-blue-600"}`}>{doc.recommendedAction}</p>
         </div>
+
+        <a
+          href={institutionMapUrl(doc.institution)}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 hover:bg-slate-50"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-blue-100 grid place-items-center text-blue-600"><MapPin className="w-4 h-4" /></div>
+            <div>
+              <div className="text-sm font-medium text-slate-900">Mergi unde trebuie</div>
+              <div className="text-xs text-slate-500">{doc.institution} · cea mai apropiată locație</div>
+            </div>
+          </div>
+          <ExternalLink className="w-4 h-4 text-slate-400" />
+        </a>
 
         <div className="flex flex-col gap-2">
           {doc.type === "identity_card" && isCitizen && (
@@ -158,6 +200,26 @@ function DocumentDetail({ doc, onClose }: { doc: Document; onClose: () => void }
             <Button fullWidth variant="outline" onClick={() => { onClose(); }}>
               {t.documents.renewAction}
             </Button>
+          )}
+          {isCitizen && (
+            confirmDelete ? (
+              <div className="flex gap-2">
+                <Button fullWidth variant="ghost" onClick={() => setConfirmDelete(false)}>Anulează</Button>
+                <button
+                  onClick={() => { onDelete(doc); onClose(); }}
+                  className="flex-1 rounded-xl bg-red-600 text-white text-sm font-medium py-2.5 hover:bg-red-700 flex items-center justify-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" /> Confirmă ștergerea
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="w-full rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm font-medium py-2.5 hover:bg-red-100 flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" /> Șterge documentul
+              </button>
+            )
           )}
           <Button variant="ghost" fullWidth onClick={onClose}>
             {t.actions.close}
