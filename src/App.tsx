@@ -87,6 +87,7 @@ function AppRoutes() {
         <Route path="/declaratii" element={<CitizenOnlyRoute><DeclaratiiScreen /></CitizenOnlyRoute>} />
         <Route path="/calendar" element={<CalendarScreen />} />
         <Route path="/rules" element={<CitizenOnlyRoute><RulesScreen /></CitizenOnlyRoute>} />
+        <Route path="/taxes" element={<CitizenOrDelegateRoute><TaxesScreen /></CitizenOrDelegateRoute>} />
         <Route path="/id-renewal" element={<CitizenOnlyRoute><IdRenewalScreen /></CitizenOnlyRoute>} />
         <Route path="/clerk" element={<ClerkOnlyRoute><ClerkScreen /></ClerkOnlyRoute>} />
       </Route>
