@@ -62,7 +62,8 @@ export function NotificationsScreen() {
   if (!citizen) return null;
 
   const firstName = citizen.fullName.split(" ").pop() ?? citizen.fullName;
-  const taxes = mockTaxes();
+  const autoPayEnabled = state.standingRules.find((r) => r.key === "auto_pay_local_taxes")?.enabled ?? false;
+  const taxes = autoPayEnabled ? [] : mockTaxes();
   const totalDue = taxes.filter((x) => x.status !== "paid").length;
 
   const expiringSoon = citizen.documents
@@ -110,27 +111,37 @@ export function NotificationsScreen() {
         <PhysicalPapers upcoming={upcoming} />
       )}
 
-      {/* Taxes */}
-      <Section
-        icon={<CreditCard className="w-5 h-5 text-white" />}
-        color="bg-rose-600"
-        title="Taxe & impozite de plătit"
-        subtitle={`${totalDue} obligații aduse automat de la ANAF & Primărie`}
-        action={{ label: "Plătește tot", onClick: () => navigate("/requests") }}
-      >
-        <div className="divide-y divide-slate-100">
-          {taxes.map((tax) => (
-            <div key={tax.id} className="py-2.5 flex items-center gap-3">
-              <div className={`w-1.5 self-stretch rounded-full ${tax.status === "overdue" ? "bg-red-500" : "bg-amber-400"}`} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 truncate">{tax.label}</p>
-                <p className="text-xs text-slate-500">{tax.institution} · scadent {tax.dueDate}</p>
-              </div>
-              <p className={`text-sm font-bold ${tax.status === "overdue" ? "text-red-600" : "text-slate-900"}`}>{tax.amount}</p>
-            </div>
-          ))}
+      {/* Taxes — hidden when auto-pay rule is active (state handles them automatically) */}
+      {autoPayEnabled ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-start gap-3">
+          <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <div className="text-xs text-emerald-800">
+            <p className="font-semibold">Taxele se plătesc automat</p>
+            <p className="text-emerald-700 mt-0.5">Regula „Plată automată taxe locale" este activă. Dezactiveaz-o din <button onClick={() => navigate("/rules")} className="underline font-medium">Reguli</button> dacă vrei să le revezi aici.</p>
+          </div>
         </div>
-      </Section>
+      ) : (
+        <Section
+          icon={<CreditCard className="w-5 h-5 text-white" />}
+          color="bg-rose-600"
+          title="Taxe & impozite de plătit"
+          subtitle={`${totalDue} obligații aduse automat de la ANAF & Primărie`}
+          action={{ label: "Plătește tot", onClick: () => navigate("/requests") }}
+        >
+          <div className="divide-y divide-slate-100">
+            {taxes.map((tax) => (
+              <div key={tax.id} className="py-2.5 flex items-center gap-3">
+                <div className={`w-1.5 self-stretch rounded-full ${tax.status === "overdue" ? "bg-red-500" : "bg-amber-400"}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">{tax.label}</p>
+                  <p className="text-xs text-slate-500">{tax.institution} · scadent {tax.dueDate}</p>
+                </div>
+                <p className={`text-sm font-bold ${tax.status === "overdue" ? "text-red-600" : "text-slate-900"}`}>{tax.amount}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
       {/* Documents */}
       <Section
