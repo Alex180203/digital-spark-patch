@@ -368,13 +368,20 @@ function AddDocumentModal({ onClose }: { onClose: () => void }) {
 }
 
 export function DocumentsScreen() {
-  const { state } = useApp();
+  const { state, dispatch, addLedgerEvent } = useApp();
   const t = useTranslations();
+  const { showToast } = useToast();
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [showAddDoc, setShowAddDoc] = useState(false);
 
   const citizen = state.citizen;
   if (!citizen) return null;
+
+  const handleDelete = (d: Document) => {
+    dispatch({ type: "REMOVE_DOCUMENT", documentId: d.id });
+    addLedgerEvent("document.removed", `Document șters: ${d.name}`);
+    showToast(`${d.name} a fost șters`, "success");
+  };
 
   const statusConfig = makeStatusConfig(t);
   const isDelegate = state.currentRole === "delegate";
@@ -448,7 +455,7 @@ export function DocumentsScreen() {
       <p className="text-center text-xs text-slate-400">{t.common.simulatedData}</p>
 
       {selectedDoc && (
-        <DocumentDetail doc={selectedDoc} onClose={() => setSelectedDoc(null)} />
+        <DocumentDetail doc={selectedDoc} onClose={() => setSelectedDoc(null)} onDelete={handleDelete} />
       )}
 
       {showAddDoc && (
