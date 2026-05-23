@@ -31,7 +31,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function CitizenOnlyRoute({ children }: { children: React.ReactNode }) {
   const { state } = useApp();
   if (state.currentRole !== "citizen") {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/notifications" replace />;
   }
   return <>{children}</>;
 }
@@ -39,7 +39,7 @@ function CitizenOnlyRoute({ children }: { children: React.ReactNode }) {
 function ClerkOnlyRoute({ children }: { children: React.ReactNode }) {
   const { state } = useApp();
   if (state.currentRole !== "clerk") {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/notifications" replace />;
   }
   return <>{children}</>;
 }
@@ -51,15 +51,15 @@ function AppRoutes() {
     <Routes>
       <Route
         path="/"
-        element={state.isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingScreen />}
+        element={state.isAuthenticated ? <Navigate to="/notifications" replace /> : <LandingScreen />}
       />
       <Route
         path="/login/roeid"
-        element={state.isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginRoeIdScreen />}
+        element={state.isAuthenticated ? <Navigate to="/notifications" replace /> : <LoginRoeIdScreen />}
       />
       <Route
         path="/login/cei-nfc"
-        element={state.isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginCeiNfcScreen />}
+        element={state.isAuthenticated ? <Navigate to="/notifications" replace /> : <LoginCeiNfcScreen />}
       />
 
       <Route element={
@@ -67,7 +67,7 @@ function AppRoutes() {
           <AppLayout />
         </ProtectedRoute>
       }>
-        <Route path="/dashboard" element={<DashboardScreen />} />
+        <Route path="/notifications" element={<DashboardScreen />} />
         <Route path="/documents" element={<DocumentsScreen />} />
         <Route path="/requests" element={<RequestsScreen />} />
         <Route path="/delegations" element={<DelegationsScreen />} />
