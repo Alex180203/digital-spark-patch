@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
-import type { AppState, Language, UserRole, LedgerEvent, Notification, AppRequest, NotificationPreference, Document } from "../types";
+import type { AppState, Language, UserRole, LedgerEvent, Notification, AppRequest, NotificationPreference, Document, StandingRule, StandingRuleKey, NotificationOverrideStatus } from "../types";
 import { mockCitizen } from "../data/mockData";
 import { createLedgerEvent, getLastHash } from "../utils/ledger";
 import { translations } from "../i18n";
@@ -22,7 +22,9 @@ type Action =
   | { type: "REVOKE_DELEGATION"; delegationId: string }
   | { type: "ADD_DOCUMENT"; document: Document }
   | { type: "REMOVE_DOCUMENT"; documentId: string }
-  | { type: "SET_NOTIFICATION_PREFERENCE"; preference: NotificationPreference };
+  | { type: "SET_NOTIFICATION_PREFERENCE"; preference: NotificationPreference }
+  | { type: "SET_STANDING_RULE"; key: StandingRuleKey; enabled: boolean; cap?: number }
+  | { type: "APPLY_NOTIFICATION_OVERRIDE"; id: string; status: NotificationOverrideStatus; note?: string };
 
 function loadFromStorage<T>(key: string, fallback: T): T {
   try {
@@ -32,6 +34,14 @@ function loadFromStorage<T>(key: string, fallback: T): T {
     return fallback;
   }
 }
+
+const defaultStandingRules: StandingRule[] = [
+  { key: "auto_pay_local_taxes", enabled: true, cap: 500, note: "Plată automată taxe locale ≤ plafon" },
+  { key: "auto_renew_documents", enabled: true, note: "Statul inițiază reînnoirea CI/permis/pașaport" },
+  { key: "auto_accept_appointments", enabled: true, note: "Acceptă programarea propusă de stat" },
+  { key: "auto_sign_declarations", enabled: false, note: "Semnează declarații pre-completate ANAF" },
+  { key: "auto_accept_deliveries", enabled: true, note: "Acceptă livrarea CEI la adresă" },
+];
 
 const initialState: AppState = {
   isAuthenticated: false,
@@ -43,6 +53,7 @@ const initialState: AppState = {
   largeText: loadFromStorage<boolean>("lazi_lt", false),
   loginMethod: null,
   notificationPreference: loadFromStorage<NotificationPreference>("lazi_notif_pref", "both"),
+  standingRules: loadFromStorage<StandingRule[]>("lazi_rules", defaultStandingRules),
 };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -168,6 +179,25 @@ function reducer(state: AppState, action: Action): AppState {
       };
     case "SET_NOTIFICATION_PREFERENCE":
       return { ...state, notificationPreference: action.preference };
+    case "SET_STANDING_RULE": {
+      const exists = state.standingRules.some((r) => r.key === action.key);
+      const rules = exists
+        ? state.standingRules.map((r) => (r.key === action.key ? { ...r, enabled: action.enabled, cap: action.cap ?? r.cap } : r))
+        : [...state.standingRules, { key: action.key, enabled: action.enabled, cap: action.cap }];
+      return { ...state, standingRules: rules };
+    }
+    case "APPLY_NOTIFICATION_OVERRIDE":
+      return {
+        ...state,
+        citizen: state.citizen
+          ? {
+              ...state.citizen,
+              notifications: state.citizen.notifications.map((n) =>
+                n.id === action.id ? { ...n, overrideStatus: action.status, overrideNote: action.note, read: true } : n
+              ),
+            }
+          : state.citizen,
+      };
     default:
       return state;
   }
