@@ -38,7 +38,7 @@ function expiryLabel(doc: Document, t: Translations): string {
   return `${Math.abs(doc.daysUntilExpiry)} ${t.documents.expiredAgo}`;
 }
 
-function DocumentCard({ doc, onOpen }: { doc: Document; onOpen: (doc: Document) => void }) {
+function DocumentCard({ doc, onOpen, showExpiry }: { doc: Document; onOpen: (doc: Document) => void; showExpiry: boolean }) {
   const t = useTranslations();
   const statusConfig = makeStatusConfig(t);
   const config = statusConfig[doc.status];
@@ -62,15 +62,18 @@ function DocumentCard({ doc, onOpen }: { doc: Document; onOpen: (doc: Document) 
             {doc.ownerName && (
               <p className="text-xs text-purple-600 font-medium mb-1">{t.documents.ownerLabel}: {doc.ownerName}</p>
             )}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               {config.icon}
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${config.bg}`}>
                 {config.label}
               </span>
-              {doc.daysUntilExpiry !== undefined && (
+              {showExpiry && doc.daysUntilExpiry !== undefined && (
                 <span className={`text-xs font-medium ${isExpired ? "text-red-600" : "text-slate-500"}`}>
-                  {isExpired ? `⚠ ${expiryLabel(doc, t)}` : (doc.daysUntilExpiry <= 90 ? expiryLabel(doc, t) : "")}
+                  {isExpired ? `⚠ ${expiryLabel(doc, t)}` : expiryLabel(doc, t)}
                 </span>
+              )}
+              {showExpiry && doc.expiryDate && (
+                <span className="text-xs text-slate-400">· {doc.expiryDate}</span>
               )}
             </div>
             <p className="text-xs text-slate-500 truncate">{doc.institution}</p>
@@ -373,6 +376,7 @@ export function DocumentsScreen() {
   const { showToast } = useToast();
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [showAddDoc, setShowAddDoc] = useState(false);
+  const [showExpiry, setShowExpiry] = useState(false);
 
   const citizen = state.citizen;
   if (!citizen) return null;
@@ -436,9 +440,23 @@ export function DocumentsScreen() {
         )}
       </div>
 
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-slate-500">{docs.length} documente</p>
+        <button
+          onClick={() => setShowExpiry((v) => !v)}
+          className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+            showExpiry
+              ? "bg-blue-600 text-white border-blue-600"
+              : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          {showExpiry ? "Ascunde datele de expirare" : "Arată datele de expirare"}
+        </button>
+      </div>
+
       <div className="space-y-3">
         {docs.map((doc) => (
-          <DocumentCard key={doc.id} doc={doc} onOpen={setSelectedDoc} />
+          <DocumentCard key={doc.id} doc={doc} onOpen={setSelectedDoc} showExpiry={showExpiry} />
         ))}
       </div>
 
