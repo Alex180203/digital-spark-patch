@@ -7,7 +7,7 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { LandingScreen } from "./screens/LandingScreen";
 import { LoginRoeIdScreen } from "./screens/LoginRoeIdScreen";
 import { LoginCeiNfcScreen } from "./screens/LoginCeiNfcScreen";
-import { DashboardScreen } from "./screens/DashboardScreen";
+
 import { DocumentsScreen } from "./screens/DocumentsScreen";
 import { RequestsScreen } from "./screens/RequestsScreen";
 import { DelegationsScreen } from "./screens/DelegationsScreen";
@@ -67,7 +67,7 @@ function AppRoutes() {
           <AppLayout />
         </ProtectedRoute>
       }>
-        <Route path="/dashboard" element={<DashboardScreen />} />
+        <Route path="/dashboard" element={<Navigate to="/notifications" replace />} />
         <Route path="/documents" element={<DocumentsScreen />} />
         <Route path="/requests" element={<RequestsScreen />} />
         <Route path="/delegations" element={<DelegationsScreen />} />
