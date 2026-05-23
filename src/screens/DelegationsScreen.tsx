@@ -724,8 +724,13 @@ export function DelegationsScreen() {
   if (!citizen) return null;
 
   const isDelegate = state.currentRole === "delegate";
+  const isCitizen = state.currentRole === "citizen";
 
   function handleRevoke(id: string) {
+    if (!isCitizen) {
+      showToast("Doar cetățeanul poate revoca delegări.", "error");
+      return;
+    }
     dispatch({ type: "REVOKE_DELEGATION", delegationId: id });
     addLedgerEvent("delegation.revoked", `Delegare revocată: ${id}`);
     showToast("Delegare revocată cu succes.", "success");
@@ -742,7 +747,7 @@ export function DelegationsScreen() {
             {t.delegations.title}
           </p>
         </div>
-        {!isDelegate && (
+        {isCitizen && (
           <Button
             size="sm"
             onClick={() => setShowCreate(true)}
@@ -771,7 +776,7 @@ export function DelegationsScreen() {
             key={del.id}
             delegation={del}
             onRevoke={handleRevoke}
-            canRevoke={!isDelegate}
+            canRevoke={isCitizen}
           />
         ))}
         {citizen.delegations.length === 0 && (
