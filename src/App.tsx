@@ -44,6 +44,15 @@ function ClerkOnlyRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/** Citizen always; delegate gets read-only access (mutations are blocked inside screens). Clerks are redirected. */
+function CitizenOrDelegateRoute({ children }: { children: React.ReactNode }) {
+  const { state } = useApp();
+  if (state.currentRole === "clerk") {
+    return <Navigate to="/notifications" replace />;
+  }
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   const { state } = useApp();
 
@@ -68,15 +77,15 @@ function AppRoutes() {
         </ProtectedRoute>
       }>
         <Route path="/dashboard" element={<Navigate to="/notifications" replace />} />
-        <Route path="/documents" element={<DocumentsScreen />} />
-        <Route path="/requests" element={<RequestsScreen />} />
-        <Route path="/delegations" element={<DelegationsScreen />} />
+        <Route path="/documents" element={<CitizenOrDelegateRoute><DocumentsScreen /></CitizenOrDelegateRoute>} />
+        <Route path="/requests" element={<CitizenOrDelegateRoute><RequestsScreen /></CitizenOrDelegateRoute>} />
+        <Route path="/delegations" element={<CitizenOnlyRoute><DelegationsScreen /></CitizenOnlyRoute>} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/notifications" element={<NotificationsScreen />} />
         <Route path="/ledger" element={<LedgerScreen />} />
-        <Route path="/declaratii" element={<DeclaratiiScreen />} />
+        <Route path="/declaratii" element={<CitizenOnlyRoute><DeclaratiiScreen /></CitizenOnlyRoute>} />
         <Route path="/calendar" element={<CalendarScreen />} />
-        <Route path="/rules" element={<RulesScreen />} />
+        <Route path="/rules" element={<CitizenOnlyRoute><RulesScreen /></CitizenOnlyRoute>} />
         <Route path="/id-renewal" element={<CitizenOnlyRoute><IdRenewalScreen /></CitizenOnlyRoute>} />
         <Route path="/clerk" element={<ClerkOnlyRoute><ClerkScreen /></ClerkOnlyRoute>} />
       </Route>

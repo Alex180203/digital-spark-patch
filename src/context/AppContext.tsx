@@ -48,7 +48,7 @@ const initialState: AppState = {
   isAuthenticated: false,
   currentRole: "citizen",
   language: loadFromStorage<Language>("lazi_language", "ro"),
-  citizen: null,
+  citizen: loadFromStorage<typeof mockCitizen | null>("lazi_citizen", null),
   ledger: loadFromStorage<LedgerEvent[]>("lazi_ledger", []),
   highContrast: loadFromStorage<boolean>("lazi_hc", false),
   largeText: loadFromStorage<boolean>("lazi_lt", false),
