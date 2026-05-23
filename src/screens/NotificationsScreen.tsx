@@ -76,14 +76,6 @@ const LEGAL_DOCS: Record<string, { title: string; law: string; required: DocSpec
   },
 };
 
-type Tax = { id: string; label: string; institution: string; amount: string; dueDate: string; status: "due" | "overdue" | "paid" };
-function mockTaxes(): Tax[] {
-  return [
-    { id: "tax-1", label: "Impozit clădire 2026 — rata 1", institution: "Primăria Cluj-Napoca", amount: "184 RON", dueDate: "2026-06-30", status: "due" },
-    { id: "tax-2", label: "Impozit auto 2026", institution: "Primăria Cluj-Napoca", amount: "92 RON", dueDate: "2026-06-04", status: "due" },
-    { id: "tax-3", label: "Amenda circulație", institution: "IPJ Cluj", amount: "290 RON", dueDate: "2026-05-15", status: "overdue" },
-  ];
-}
 
 type ProposedAppointment = {
   id: string;
