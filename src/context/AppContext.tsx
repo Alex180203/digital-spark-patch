@@ -242,6 +242,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("lazi_rules", JSON.stringify(state.standingRules));
   }, [state.standingRules]);
 
+  useEffect(() => {
+    if (state.citizen) {
+      localStorage.setItem("lazi_citizen", JSON.stringify(state.citizen));
+    }
+  }, [state.citizen]);
+
   const addLedgerEvent = useCallback(
     (action: string, payload: string) => {
       const actorId = state.citizen?.id ?? "anonymous";
