@@ -1,20 +1,21 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Home, FileText, ClipboardList, Users, User, Building2, Hash } from "lucide-react";
+import { Home, FileText, Bell, Calendar as CalendarIcon, User, Building2, Hash } from "lucide-react";
 import { useApp, useTranslations } from "../../context/AppContext";
 
 export function BottomNav() {
   const { state } = useApp();
   const t = useTranslations();
   const isClerk = state.currentRole === "clerk";
+  const unread = state.citizen?.notifications.filter((n) => !n.read).length ?? 0;
 
   const citizenLinks = [
     { to: "/dashboard", icon: Home, label: t.nav.home },
+    { to: "/notifications", icon: Bell, label: t.nav.notifications ?? "Notificări", badge: unread },
+    { to: "/calendar", icon: CalendarIcon, label: "Calendar" },
     { to: "/documents", icon: FileText, label: t.nav.documents },
-    { to: "/requests", icon: ClipboardList, label: t.nav.requests },
-    { to: "/delegations", icon: Users, label: t.nav.delegations },
     { to: "/profile", icon: User, label: t.nav.profile },
-  ];
+  ] as Array<{ to: string; icon: typeof Home; label: string; badge?: number }>;
 
   const clerkLinks = [
     { to: "/clerk", icon: Building2, label: t.common.roles.clerk },
