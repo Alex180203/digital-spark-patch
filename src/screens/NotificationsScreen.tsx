@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bell, AlertTriangle, Info, CheckCircle, ChevronRight, Calendar as CalIcon, Flag, Clock } from "lucide-react";
+import { Bell, AlertTriangle, Info, CheckCircle, ChevronRight, Calendar as CalIcon, Flag, Clock, MapPin, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApp, useTranslations } from "../context/AppContext";
 import { Badge } from "../components/lazi-ui/Badge";
@@ -196,6 +196,8 @@ export function NotificationsScreen() {
         <p className="text-xs text-amber-600 font-medium">{t.notifications.delegateFilterNote}</p>
       )}
 
+      <PhysicalPapersSection citizen={citizen} />
+
       {notifications.length === 0 ? (
         <div className="text-center py-16 text-slate-400">
           <Bell className="w-12 h-12 mx-auto mb-3 opacity-40" />
@@ -216,6 +218,79 @@ export function NotificationsScreen() {
       )}
 
       <p className="text-center text-xs text-slate-400">{t.common.simulatedData}</p>
+    </div>
+  );
+}
+
+const REQUIRED_DOCS: Record<string, string[]> = {
+  identity_renewal: [
+    "Actul de identitate actual (original)",
+    "Certificat de naștere (original)",
+    "Dovada adresei de domiciliu",
+    "Dovada achitării taxei (dacă e cazul)",
+  ],
+  passport: [
+    "Carte de identitate (original + copie)",
+    "Certificat de naștere",
+    "Dovada plății taxei de pașaport",
+    "Pașaportul vechi (dacă există)",
+  ],
+  driving_license: [
+    "Carte de identitate (original)",
+    "Permisul de conducere vechi",
+    "Aviz medical valabil",
+    "Dovada plății taxei",
+  ],
+  fiscal_certificate: [
+    "Carte de identitate (original)",
+    "Cerere tip (se completează la ghișeu)",
+  ],
+  default: [
+    "Carte de identitate (original)",
+    "Documentele menționate în cerere",
+  ],
+};
+
+function PhysicalPapersSection({ citizen }: { citizen: import("../types").Citizen }) {
+  const upcoming = citizen.requests
+    .filter((r) => r.appointment && new Date(r.appointment.date) >= new Date(new Date().toDateString()))
+    .sort((a, b) => (a.appointment!.date < b.appointment!.date ? -1 : 1));
+
+  if (upcoming.length === 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-blue-600 grid place-items-center">
+          <Briefcase className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h2 className="font-bold text-slate-900 text-sm">Acte de adus fizic la ghișeu</h2>
+          <p className="text-xs text-slate-500">Pregătește originalele înainte de programare</p>
+        </div>
+      </div>
+      <div className="space-y-3">
+        {upcoming.map((r) => {
+          const docs = REQUIRED_DOCS[r.type] ?? REQUIRED_DOCS.default;
+          return (
+            <div key={r.id} className="bg-white rounded-xl p-3 border border-slate-100">
+              <p className="text-sm font-semibold text-slate-900">{r.title}</p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
+                <span className="inline-flex items-center gap-1"><CalIcon className="w-3.5 h-3.5" />{r.appointment!.date} · {r.appointment!.time}</span>
+                <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{r.appointment!.office}</span>
+              </div>
+              <ul className="mt-2 space-y-1">
+                {docs.map((d, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <span>{d}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
