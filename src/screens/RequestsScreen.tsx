@@ -127,21 +127,22 @@ function RequestDetail({ request, onClose }: { request: AppRequest; onClose: () 
   const isClerk = state.currentRole === "clerk";
   const [loading, setLoading] = useState(false);
 
-  const clerkStatuses = [
-    { key: "dataVerified", label: t.requests.clerkActions.dataVerified },
-    { key: "appointmentConfirmed", label: t.requests.clerkActions.appointmentConfirmed },
-    { key: "inProcessing", label: t.requests.clerkActions.inProcessing },
-    { key: "readyForPickup", label: t.requests.clerkActions.readyForPickup },
+  const clerkStatuses: Array<{ key: AppRequest["status"]; label: string }> = [
+    { key: "confirmed_by_clerk", label: t.requests.clerkActions.dataVerified },
+    { key: "appointment_selected", label: t.requests.clerkActions.appointmentConfirmed },
+    { key: "in_processing", label: t.requests.clerkActions.inProcessing },
+    { key: "ready_for_pickup", label: t.requests.clerkActions.readyForPickup },
   ];
 
-  async function handleClerkUpdate(newStatus: string, label: string) {
+  async function handleClerkUpdate(newStatus: AppRequest["status"], label: string) {
+    if (state.currentRole !== "clerk") return;
     setLoading(true);
     await new Promise((r) => setTimeout(r, 800));
     addLedgerEvent("request.status_updated", `Status updated: ${label} for request ${request.id}`);
     dispatch({
       type: "UPDATE_REQUEST",
       requestId: request.id,
-      updates: { status: newStatus as AppRequest["status"] },
+      updates: { status: newStatus },
     });
     const newNotif = {
       id: `notif-clerk-${Date.now()}`,

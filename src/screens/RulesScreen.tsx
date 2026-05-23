@@ -33,6 +33,10 @@ export function RulesScreen() {
   const { showToast } = useToast();
 
   function toggle(key: StandingRuleKey, enabled: boolean) {
+    if (state.currentRole !== "citizen") {
+      showToast("Doar cetățeanul poate modifica regulile.", "error");
+      return;
+    }
     dispatch({ type: "SET_STANDING_RULE", key, enabled });
     addLedgerEvent("rule.toggle", `${key} → ${enabled ? "on" : "off"}`);
     showToast(enabled ? "Regulă activată" : "Regulă dezactivată", "success");
