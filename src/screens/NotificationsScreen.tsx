@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bell, AlertTriangle, Info, CheckCircle, ChevronRight, Calendar as CalIcon, Flag, Clock } from "lucide-react";
+import { Bell, AlertTriangle, Info, CheckCircle, ChevronRight, Calendar as CalIcon, Flag, Clock, MapPin, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApp, useTranslations } from "../context/AppContext";
 import { Badge } from "../components/lazi-ui/Badge";
