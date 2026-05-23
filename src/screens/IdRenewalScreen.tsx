@@ -7,10 +7,10 @@ import {
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { useApp, useTranslations, useBranding } from "../context/AppContext";
-import { Button } from "../components/ui/Button";
-import { Badge } from "../components/ui/Badge";
-import { Card, CardContent } from "../components/ui/Card";
-import { useToast } from "../components/ui/Toast";
+import { Button } from "../components/lazi-ui/Button";
+import { Badge } from "../components/lazi-ui/Badge";
+import { Card, CardContent } from "../components/lazi-ui/Card";
+import { useToast } from "../components/lazi-ui/Toast";
 import { ceiEligibilityScenarios, mockAppointmentSlots } from "../data/mockData";
 import type { CEIEligibilityScenario, AppRequest } from "../types";
 

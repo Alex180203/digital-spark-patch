@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Smartphone, ArrowLeft, CheckCircle, Wifi } from "lucide-react";
 import { useApp, useTranslations, useBranding } from "../context/AppContext";
-import { Button } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
-import { useToast } from "../components/ui/Toast";
+import { Button } from "../components/lazi-ui/Button";
+import { Input } from "../components/lazi-ui/Input";
+import { useToast } from "../components/lazi-ui/Toast";
 
 type Step = "can" | "pin" | "tap" | "verified";
 

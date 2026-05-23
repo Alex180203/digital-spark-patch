@@ -5,10 +5,10 @@ import {
   ChevronRight, ShieldCheck, Users, Hash, ToggleLeft, ToggleRight, Bell
 } from "lucide-react";
 import { useApp, useTranslations, useBranding } from "../context/AppContext";
-import { Card, CardContent } from "../components/ui/Card";
-import { Badge } from "../components/ui/Badge";
-import { Button } from "../components/ui/Button";
-import { useToast } from "../components/ui/Toast";
+import { Card, CardContent } from "../components/lazi-ui/Card";
+import { Badge } from "../components/lazi-ui/Badge";
+import { Button } from "../components/lazi-ui/Button";
+import { useToast } from "../components/lazi-ui/Toast";
 import type { Language, NotificationPreference } from "../types";
 
 const languageOptions: { code: Language; label: string; flag: string }[] = [

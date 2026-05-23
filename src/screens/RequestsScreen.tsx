@@ -4,10 +4,10 @@ import {
   Calendar, Activity
 } from "lucide-react";
 import { useApp, useTranslations } from "../context/AppContext";
-import { Card, CardContent } from "../components/ui/Card";
-import { Badge } from "../components/ui/Badge";
-import { Button } from "../components/ui/Button";
-import { useToast } from "../components/ui/Toast";
+import { Card, CardContent } from "../components/lazi-ui/Card";
+import { Badge } from "../components/lazi-ui/Badge";
+import { Button } from "../components/lazi-ui/Button";
+import { useToast } from "../components/lazi-ui/Toast";
 import type { AppRequest, RequestStep } from "../types";
 
 function StepIndicator({ step, isLast }: { step: RequestStep; isLast: boolean }) {

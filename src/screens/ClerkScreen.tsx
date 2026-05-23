@@ -4,9 +4,9 @@ import {
   Activity, User, Calendar, Bell, Shield
 } from "lucide-react";
 import { useApp, useTranslations, useBranding } from "../context/AppContext";
-import { Card, CardContent } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
-import { useToast } from "../components/ui/Toast";
+import { Card, CardContent } from "../components/lazi-ui/Card";
+import { Button } from "../components/lazi-ui/Button";
+import { useToast } from "../components/lazi-ui/Toast";
 import type { AppRequest } from "../types";
 
 function ClerkRequestCard({ request, onOpen }: { request: AppRequest; onOpen: (r: AppRequest) => void }) {

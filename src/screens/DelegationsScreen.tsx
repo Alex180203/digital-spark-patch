@@ -4,11 +4,11 @@ import {
   Smartphone, Search, FileText, Eye
 } from "lucide-react";
 import { useApp, useTranslations, useBranding } from "../context/AppContext";
-import { Card, CardContent } from "../components/ui/Card";
-import { Badge } from "../components/ui/Badge";
-import { Button } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
-import { useToast } from "../components/ui/Toast";
+import { Card, CardContent } from "../components/lazi-ui/Card";
+import { Badge } from "../components/lazi-ui/Badge";
+import { Button } from "../components/lazi-ui/Button";
+import { Input } from "../components/lazi-ui/Input";
+import { useToast } from "../components/lazi-ui/Toast";
 import { mockPersonLookup } from "../data/mockData";
 import type { Delegation } from "../types";
 import { addDays, addMonths, addYears, format } from "date-fns";

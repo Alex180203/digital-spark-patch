@@ -2,9 +2,9 @@ import React from "react";
 import { Bell, AlertTriangle, Info, CheckCircle, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApp, useTranslations } from "../context/AppContext";
-import { Badge } from "../components/ui/Badge";
-import { Button } from "../components/ui/Button";
-import { useToast } from "../components/ui/Toast";
+import { Badge } from "../components/lazi-ui/Badge";
+import { Button } from "../components/lazi-ui/Button";
+import { useToast } from "../components/lazi-ui/Toast";
 import type { Notification } from "../types";
 
 function NotificationItem({

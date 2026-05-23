@@ -1,7 +1,7 @@
 import React from "react";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider, useApp } from "./context/AppContext";
-import { ToastProvider } from "./components/ui/Toast";
+import { ToastProvider } from "./components/lazi-ui/Toast";
 import { AppLayout } from "./components/layout/AppLayout";
 
 import { LandingScreen } from "./screens/LandingScreen";

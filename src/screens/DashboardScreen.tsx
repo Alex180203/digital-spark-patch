@@ -5,9 +5,9 @@ import {
   FileText, CreditCard, Activity, Car, Users, Shield
 } from "lucide-react";
 import { useApp, useTranslations } from "../context/AppContext";
-import { Card, CardContent } from "../components/ui/Card";
-import { Badge } from "../components/ui/Badge";
-import { Button } from "../components/ui/Button";
+import { Card, CardContent } from "../components/lazi-ui/Card";
+import { Badge } from "../components/lazi-ui/Badge";
+import { Button } from "../components/lazi-ui/Button";
 
 interface TimelineEvent {
   label: string;
