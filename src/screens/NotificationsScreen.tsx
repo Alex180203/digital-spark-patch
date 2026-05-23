@@ -123,6 +123,14 @@ export function NotificationsScreen() {
 
   const [decisions, setDecisions] = useState<Record<string, "accepted" | "declined" | undefined>>({});
   const [openLegal, setOpenLegal] = useState<string | null>(null);
+  const [agg, setAgg] = useState<AggregatedTaxes | null>(null);
+  const [loadingTaxes, setLoadingTaxes] = useState(true);
+
+  const reloadTaxes = React.useCallback(() => {
+    setLoadingTaxes(true);
+    fetchAllTaxes().then((r) => { setAgg(r); setLoadingTaxes(false); });
+  }, []);
+  useEffect(() => { reloadTaxes(); }, [reloadTaxes]);
 
   if (!citizen) return null;
 
@@ -130,8 +138,9 @@ export function NotificationsScreen() {
   const autoPayEnabled = state.standingRules.find((r) => r.key === "auto_pay_local_taxes")?.enabled ?? false;
   const autoAcceptEnabled = state.standingRules.find((r) => r.key === "auto_accept_appointments")?.enabled ?? false;
 
-  const taxes = autoPayEnabled ? [] : mockTaxes();
+  const taxes = autoPayEnabled ? [] : (agg?.taxes ?? []);
   const totalDue = taxes.filter((x) => x.status !== "paid").length;
+  const totalAmount = taxes.filter((x) => x.status !== "paid").reduce((s, x) => s + x.amount, 0);
 
   const proposed = mockProposed(citizen.documents).filter((p) => !decisions[p.id]);
 
