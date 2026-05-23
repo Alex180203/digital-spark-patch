@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Home, FileText, Bell, Calendar as CalendarIcon, User, Building2, Hash } from "lucide-react";
+import { Home, FileText, Calendar as CalendarIcon, User, Building2, Hash, Receipt } from "lucide-react";
 import { useApp, useTranslations } from "../../context/AppContext";
 
 export function BottomNav() {
@@ -11,6 +11,7 @@ export function BottomNav() {
 
   const citizenLinks = [
     { to: "/notifications", icon: Home, label: t.nav.home, badge: unread },
+    { to: "/taxes", icon: Receipt, label: "Taxe" },
     { to: "/calendar", icon: CalendarIcon, label: "Calendar" },
     { to: "/documents", icon: FileText, label: t.nav.documents },
     { to: "/profile", icon: User, label: t.nav.profile },
