@@ -1,49 +1,116 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Briefcase, CalendarDays, MapPin, CheckCircle, AlertTriangle, FileText,
-  CreditCard, Database, ChevronRight, RefreshCw, ShieldCheck,
+  Briefcase, CalendarDays, MapPin, CheckCircle, FileText, ChevronDown, ChevronUp,
+  CreditCard, Database, ChevronRight, RefreshCw, ShieldCheck, Clock, X, Edit3, Sparkles,
 } from "lucide-react";
 import { useApp, useTranslations } from "../context/AppContext";
-import type { Citizen, AppRequest, Document } from "../types";
+import type { AppRequest, Document } from "../types";
 
-const REQUIRED_DOCS: Record<string, string[]> = {
-  identity_renewal: [
-    "Actul de identitate actual (original)",
-    "Certificat de naștere (original)",
-    "Dovada adresei de domiciliu",
-    "Dovada achitării taxei (dacă e cazul)",
-  ],
-  passport: [
-    "Carte de identitate (original + copie)",
-    "Certificat de naștere",
-    "Dovada plății taxei de pașaport",
-    "Pașaportul vechi (dacă există)",
-  ],
-  driving_license: [
-    "Carte de identitate (original)",
-    "Permisul de conducere vechi",
-    "Aviz medical valabil",
-    "Dovada plății taxei",
-  ],
-  fiscal_certificate: [
-    "Carte de identitate (original)",
-    "Cerere tip (se completează la ghișeu)",
-  ],
-  default: [
-    "Carte de identitate (original)",
-    "Documentele menționate în cerere",
-  ],
+/**
+ * Required & legal documents per Romanian legislation (sources noted).
+ * Kept as readable lists for an MVP — these mirror the official lists from
+ * DEPABD, DGP (pașapoarte), DRPCIV, ANAF and primării.
+ */
+type DocSpec = { label: string; legal: string };
+const LEGAL_DOCS: Record<string, { title: string; law: string; required: DocSpec[]; optional?: DocSpec[] }> = {
+  identity_renewal: {
+    title: "Carte de identitate (buletin)",
+    law: "OUG 97/2005 privind evidența, domiciliul, reședința și actele de identitate",
+    required: [
+      { label: "Cerere tip pentru eliberarea actului de identitate", legal: "Anexa 1, HG 295/2021" },
+      { label: "Actul de identitate anterior (sau declarație de pierdere/furt)", legal: "Art. 15 OUG 97/2005" },
+      { label: "Certificat de naștere — original și copie", legal: "Art. 15 lit. b OUG 97/2005" },
+      { label: "Dovada adresei de domiciliu (act proprietate / contract / declarație gazdă)", legal: "Art. 27 OUG 97/2005" },
+      { label: "Chitanță taxă 7 RON (CI simplă) sau 67 RON (CEI)", legal: "OUG 41/2016" },
+    ],
+    optional: [
+      { label: "Certificat de căsătorie (dacă e cazul)", legal: "Art. 15 lit. c OUG 97/2005" },
+      { label: "Hotărâre de divorț definitivă (dacă e cazul)", legal: "Art. 15 lit. d OUG 97/2005" },
+    ],
+  },
+  passport: {
+    title: "Pașaport simplu electronic",
+    law: "Legea 248/2005 privind regimul liberei circulații a cetățenilor români",
+    required: [
+      { label: "Carte de identitate valabilă — original", legal: "Art. 16 alin. (1) Legea 248/2005" },
+      { label: "Pașaportul anterior (dacă există)", legal: "Art. 18 Legea 248/2005" },
+      { label: "Dovada plății taxei de 258 RON (pașaport electronic, adult)", legal: "OUG 41/2016 anexa 4" },
+      { label: "Fotografie biometrică se face la ghișeu", legal: "Art. 17 Legea 248/2005" },
+    ],
+    optional: [
+      { label: "Acordul ambilor părinți (pentru minori sub 18 ani)", legal: "Art. 17^1 Legea 248/2005" },
+    ],
+  },
+  driving_license: {
+    title: "Permis de conducere",
+    law: "OUG 195/2002 privind circulația pe drumurile publice",
+    required: [
+      { label: "Cerere tip", legal: "Anexa Ord. MAI 268/2010" },
+      { label: "Carte de identitate — original și copie", legal: "Art. 24 OUG 195/2002" },
+      { label: "Permisul de conducere anterior (preschimbare)", legal: "Art. 24^1 OUG 195/2002" },
+      { label: "Fișa medicală tip avizată (cabinet autorizat)", legal: "Ord. MS 1162/2010" },
+      { label: "Dovada plății taxei 89 RON", legal: "OUG 41/2016" },
+    ],
+  },
+  fiscal_certificate: {
+    title: "Certificat de atestare fiscală",
+    law: "Codul de procedură fiscală (Legea 207/2015), art. 158",
+    required: [
+      { label: "Cerere tip (se completează la ghișeu sau prin SPV)", legal: "Anexa Ord. ANAF 3654/2015" },
+      { label: "Carte de identitate — original", legal: "Art. 158 Cod proc. fiscală" },
+    ],
+    optional: [
+      { label: "Împuternicire notarială (dacă reprezentați pe altcineva)", legal: "Art. 18 Cod proc. fiscală" },
+    ],
+  },
+  default: {
+    title: "Documente generale",
+    law: "Conform reglementărilor instituției emitente",
+    required: [
+      { label: "Carte de identitate — original", legal: "—" },
+      { label: "Documentele specificate în cerere", legal: "—" },
+    ],
+  },
 };
 
 type Tax = { id: string; label: string; institution: string; amount: string; dueDate: string; status: "due" | "overdue" | "paid" };
-
 function mockTaxes(): Tax[] {
   return [
     { id: "tax-1", label: "Impozit clădire 2026 — rata 1", institution: "Primăria Cluj-Napoca", amount: "184 RON", dueDate: "2026-06-30", status: "due" },
     { id: "tax-2", label: "Impozit auto 2026", institution: "Primăria Cluj-Napoca", amount: "92 RON", dueDate: "2026-06-04", status: "due" },
     { id: "tax-3", label: "Amenda circulație", institution: "IPJ Cluj", amount: "290 RON", dueDate: "2026-05-15", status: "overdue" },
   ];
+}
+
+type ProposedAppointment = {
+  id: string;
+  reqType: string;
+  reason: string;
+  date: string;
+  time: string;
+  office: string;
+  autoAcceptIn: string; // human readable
+};
+
+function mockProposed(citizenDocs: Document[]): ProposedAppointment[] {
+  // Find expiring ID/passport/license and propose a slot
+  const proposals: ProposedAppointment[] = [];
+  const ci = citizenDocs.find((d) => d.type === "identity" && (d.daysUntilExpiry ?? 999) <= 90);
+  if (ci) proposals.push({
+    id: "prop-ci", reqType: "identity_renewal",
+    reason: `Buletinul tău expiră în ${ci.daysUntilExpiry} zile`,
+    date: "2026-06-12", time: "10:30", office: "SPCLEP Cluj-Napoca, str. Moților 7",
+    autoAcceptIn: "3 zile",
+  });
+  const pas = citizenDocs.find((d) => d.type === "passport" && (d.daysUntilExpiry ?? 999) <= 180);
+  if (pas) proposals.push({
+    id: "prop-pas", reqType: "passport",
+    reason: `Pașaportul expiră în ${pas.daysUntilExpiry} zile`,
+    date: "2026-07-02", time: "09:15", office: "Serviciul Pașapoarte Cluj, Calea Dorobanților 81",
+    autoAcceptIn: "5 zile",
+  });
+  return proposals;
 }
 
 const SOURCES = [
@@ -59,12 +126,20 @@ export function NotificationsScreen() {
   const t = useTranslations();
   const navigate = useNavigate();
   const citizen = state.citizen;
+
+  const [decisions, setDecisions] = useState<Record<string, "accepted" | "declined" | undefined>>({});
+  const [openLegal, setOpenLegal] = useState<string | null>(null);
+
   if (!citizen) return null;
 
   const firstName = citizen.fullName.split(" ").pop() ?? citizen.fullName;
   const autoPayEnabled = state.standingRules.find((r) => r.key === "auto_pay_local_taxes")?.enabled ?? false;
+  const autoAcceptEnabled = state.standingRules.find((r) => r.key === "auto_accept_appointments")?.enabled ?? false;
+
   const taxes = autoPayEnabled ? [] : mockTaxes();
   const totalDue = taxes.filter((x) => x.status !== "paid").length;
+
+  const proposed = mockProposed(citizen.documents).filter((p) => !decisions[p.id]);
 
   const expiringSoon = citizen.documents
     .filter((d) => d.daysUntilExpiry != null && d.daysUntilExpiry <= 90 && d.daysUntilExpiry >= -30)
@@ -79,14 +154,14 @@ export function NotificationsScreen() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Bună, {firstName}</h1>
-        <p className="text-sm text-slate-500 mt-1">Tot ce ai cu statul, într-un singur loc. Nu trebuie să cauți nimic.</p>
+        <p className="text-sm text-slate-500 mt-1">Statul îți pregătește totul. Tu doar confirmi.</p>
         <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
           <ShieldCheck className="w-3.5 h-3.5" />
           Sincronizat acum din surse oficiale
         </div>
       </div>
 
-      {/* Sources strip */}
+      {/* Surse */}
       <div className="rounded-2xl border border-slate-200 bg-white p-3">
         <div className="flex items-center gap-2 mb-2">
           <Database className="w-4 h-4 text-slate-500" />
@@ -106,12 +181,126 @@ export function NotificationsScreen() {
         </div>
       </div>
 
-      {/* Papers to bring physically */}
-      {upcoming.length > 0 && (
-        <PhysicalPapers upcoming={upcoming} />
+      {/* Proposed appointments — lazy citizen flow */}
+      {proposed.length > 0 && (
+        <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-blue-50 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-violet-600 grid place-items-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="font-bold text-slate-900 text-sm">Programări propuse pentru tine</h2>
+              <p className="text-xs text-slate-500">
+                {autoAcceptEnabled ? "Se acceptă automat dacă nu intervii." : "Confirmă, mută sau respinge."}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {proposed.map((p) => {
+              const spec = LEGAL_DOCS[p.reqType] ?? LEGAL_DOCS.default;
+              const isOpen = openLegal === p.id;
+              return (
+                <div key={p.id} className="bg-white rounded-xl border border-slate-200 p-3">
+                  <p className="text-sm font-semibold text-slate-900">{spec.title}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{p.reason}</p>
+
+                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
+                    <span className="inline-flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" />{p.date} · {p.time}</span>
+                    <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{p.office}</span>
+                  </div>
+
+                  {!autoAcceptEnabled && (
+                    <p className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                      <Clock className="w-3 h-3" /> Se acceptă automat în {p.autoAcceptIn} dacă nu răspunzi
+                    </p>
+                  )}
+
+                  {/* Legal docs dropdown */}
+                  <button
+                    onClick={() => setOpenLegal(isOpen ? null : p.id)}
+                    className="mt-3 w-full flex items-center justify-between px-3 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-medium text-slate-700"
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5" /> Acte necesare conform legii
+                    </span>
+                    {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  {isOpen && (
+                    <div className="mt-2 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                      <p className="text-[11px] text-slate-500 italic mb-2">Bază legală: {spec.law}</p>
+                      <p className="text-xs font-semibold text-slate-700 mb-1">Obligatoriu</p>
+                      <ul className="space-y-1.5 mb-2">
+                        {spec.required.map((d, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                            <span className="text-slate-700">
+                              {d.label}
+                              <span className="block text-[10px] text-slate-400">{d.legal}</span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      {spec.optional && spec.optional.length > 0 && (
+                        <>
+                          <p className="text-xs font-semibold text-slate-700 mb-1 mt-2">Doar dacă e cazul</p>
+                          <ul className="space-y-1.5">
+                            {spec.optional.map((d, i) => (
+                              <li key={i} className="flex items-start gap-2 text-xs">
+                                <CheckCircle className="w-3.5 h-3.5 text-slate-300 mt-0.5 flex-shrink-0" />
+                                <span className="text-slate-600">
+                                  {d.label}
+                                  <span className="block text-[10px] text-slate-400">{d.legal}</span>
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={() => setDecisions((d) => ({ ...d, [p.id]: "accepted" }))}
+                      className="flex-1 inline-flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg"
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" /> Da, e ok
+                    </button>
+                    <button
+                      onClick={() => navigate("/requests")}
+                      className="inline-flex items-center justify-center gap-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold px-3 py-2 rounded-lg"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" /> Mută
+                    </button>
+                    <button
+                      onClick={() => setDecisions((d) => ({ ...d, [p.id]: "declined" }))}
+                      className="inline-flex items-center justify-center gap-1 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-xs font-semibold px-3 py-2 rounded-lg"
+                    >
+                      <X className="w-3.5 h-3.5" /> Nu
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {!autoAcceptEnabled && (
+            <button
+              onClick={() => navigate("/rules")}
+              className="mt-3 w-full text-center text-xs text-violet-700 font-medium hover:underline"
+            >
+              Vrei să accept automat toate propunerile? Activează regula →
+            </button>
+          )}
+        </div>
       )}
 
-      {/* Taxes — hidden when auto-pay rule is active (state handles them automatically) */}
+      {/* Confirmed upcoming */}
+      {upcoming.length > 0 && <PhysicalPapers upcoming={upcoming} />}
+
+      {/* Taxes */}
       {autoPayEnabled ? (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-start gap-3">
           <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
@@ -207,6 +396,7 @@ function DocRow({ doc, onClick }: { doc: Document; onClick: () => void }) {
 }
 
 function PhysicalPapers({ upcoming }: { upcoming: AppRequest[] }) {
+  const [open, setOpen] = useState<string | null>(null);
   return (
     <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-4">
       <div className="flex items-center gap-2 mb-3">
@@ -214,13 +404,14 @@ function PhysicalPapers({ upcoming }: { upcoming: AppRequest[] }) {
           <Briefcase className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h2 className="font-bold text-slate-900 text-sm">Acte de adus fizic la ghișeu</h2>
-          <p className="text-xs text-slate-500">Pregătite automat pentru programările tale</p>
+          <h2 className="font-bold text-slate-900 text-sm">Programări confirmate</h2>
+          <p className="text-xs text-slate-500">Cu lista oficială de acte necesare</p>
         </div>
       </div>
       <div className="space-y-3">
         {upcoming.map((r) => {
-          const docs = REQUIRED_DOCS[r.type] ?? REQUIRED_DOCS.default;
+          const spec = LEGAL_DOCS[r.type] ?? LEGAL_DOCS.default;
+          const isOpen = open === r.id;
           return (
             <div key={r.id} className="bg-white rounded-xl p-3 border border-slate-100">
               <p className="text-sm font-semibold text-slate-900">{r.title}</p>
@@ -228,14 +419,31 @@ function PhysicalPapers({ upcoming }: { upcoming: AppRequest[] }) {
                 <span className="inline-flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" />{r.appointment!.date} · {r.appointment!.time}</span>
                 <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{r.appointment!.office}</span>
               </div>
-              <ul className="mt-2 space-y-1">
-                {docs.map((d, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                    <span>{d}</span>
-                  </li>
-                ))}
-              </ul>
+              <button
+                onClick={() => setOpen(isOpen ? null : r.id)}
+                className="mt-2 w-full flex items-center justify-between px-3 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-medium text-slate-700"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5" /> Acte de adus ({spec.required.length})
+                </span>
+                {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              {isOpen && (
+                <div className="mt-2 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <p className="text-[11px] text-slate-500 italic mb-2">Bază legală: {spec.law}</p>
+                  <ul className="space-y-1.5">
+                    {spec.required.map((d, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs">
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-slate-700">
+                          {d.label}
+                          <span className="block text-[10px] text-slate-400">{d.legal}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           );
         })}
