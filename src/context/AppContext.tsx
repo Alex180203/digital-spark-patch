@@ -21,6 +21,7 @@ type Action =
   | { type: "CREATE_DELEGATION"; delegation: import("../types").Delegation }
   | { type: "REVOKE_DELEGATION"; delegationId: string }
   | { type: "ADD_DOCUMENT"; document: Document }
+  | { type: "REMOVE_DOCUMENT"; documentId: string }
   | { type: "SET_NOTIFICATION_PREFERENCE"; preference: NotificationPreference };
 
 function loadFromStorage<T>(key: string, fallback: T): T {
@@ -156,6 +157,13 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         citizen: state.citizen
           ? { ...state.citizen, documents: [...state.citizen.documents, action.document] }
+          : state.citizen,
+      };
+    case "REMOVE_DOCUMENT":
+      return {
+        ...state,
+        citizen: state.citizen
+          ? { ...state.citizen, documents: state.citizen.documents.filter((d) => d.id !== action.documentId) }
           : state.citizen,
       };
     case "SET_NOTIFICATION_PREFERENCE":
