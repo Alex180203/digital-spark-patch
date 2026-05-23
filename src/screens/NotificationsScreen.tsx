@@ -164,24 +164,43 @@ export function NotificationsScreen() {
         </div>
       </div>
 
-      {/* Surse */}
+      {/* Surse — live mock API status */}
       <div className="rounded-2xl border border-slate-200 bg-white p-3">
         <div className="flex items-center gap-2 mb-2">
           <Database className="w-4 h-4 text-slate-500" />
           <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Surse conectate</p>
-          <button className="ml-auto inline-flex items-center gap-1 text-xs text-blue-600 font-medium" onClick={() => location.reload()}>
-            <RefreshCw className="w-3.5 h-3.5" /> Reîmprospătează
+          <button
+            disabled={loadingTaxes}
+            className="ml-auto inline-flex items-center gap-1 text-xs text-blue-600 font-medium disabled:opacity-50"
+            onClick={reloadTaxes}
+          >
+            {loadingTaxes ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            {loadingTaxes ? "Sincronizare..." : "Reîmprospătează"}
           </button>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {SOURCES.map((s) => (
-            <span key={s.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="font-semibold">{s.name}</span>
-              <span className="text-slate-400">· {s.desc}</span>
-            </span>
-          ))}
+          {SOURCES.map((s) => {
+            const live = agg?.sources.find((x) => x.source === s.name);
+            const ok = live?.ok ?? false;
+            return (
+              <span key={s.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-700" title={live?.endpoint}>
+                {loadingTaxes ? (
+                  <Loader2 className="w-2.5 h-2.5 animate-spin text-slate-400" />
+                ) : (
+                  <Radio className={`w-2.5 h-2.5 ${ok ? "text-emerald-500" : "text-slate-300"}`} />
+                )}
+                <span className="font-semibold">{s.name}</span>
+                <span className="text-slate-400">· {s.desc}</span>
+                {live && <span className="text-slate-400">· {live.latencyMs}ms</span>}
+              </span>
+            );
+          })}
         </div>
+        {agg && (
+          <p className="text-[10px] text-slate-400 mt-2 font-mono">
+            GET /aggregator/v1/citizen/me · {agg.sources.length} surse · {agg.taxes.length} obligații
+          </p>
+        )}
       </div>
 
       {/* Proposed appointments — lazy citizen flow */}
