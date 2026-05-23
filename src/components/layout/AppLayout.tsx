@@ -13,6 +13,7 @@ function DesktopSideNav() {
 
   const citizenLinks = [
     { to: "/notifications", icon: Home, label: t.nav.home, badge: unread },
+    { to: "/taxes", icon: Receipt, label: "Taxe" },
     { to: "/calendar", icon: Calendar, label: "Calendar" },
     { to: "/documents", icon: FileText, label: t.nav.documents },
     { to: "/declaratii", icon: FileSignature, label: "Declarații" },
