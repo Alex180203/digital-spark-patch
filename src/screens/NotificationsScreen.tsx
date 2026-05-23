@@ -1,226 +1,11 @@
-import React, { useState } from "react";
-import { Bell, AlertTriangle, Info, CheckCircle, ChevronRight, Calendar as CalIcon, Flag, Clock, MapPin, Briefcase } from "lucide-react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Briefcase, CalendarDays, MapPin, CheckCircle, AlertTriangle, FileText,
+  CreditCard, Database, ChevronRight, RefreshCw, ShieldCheck,
+} from "lucide-react";
 import { useApp, useTranslations } from "../context/AppContext";
-import { Badge } from "../components/lazi-ui/Badge";
-import { Button } from "../components/lazi-ui/Button";
-import { useToast } from "../components/lazi-ui/Toast";
-import type { Notification, NotificationOverrideStatus } from "../types";
-
-function statusBadge(status?: NotificationOverrideStatus) {
-  if (!status || status === "pending") return null;
-  const map: Record<Exclude<NotificationOverrideStatus, "pending">, { label: string; cls: string }> = {
-    accepted: { label: "Acceptat", cls: "bg-emerald-100 text-emerald-700" },
-    changed: { label: "Reprogramat", cls: "bg-blue-100 text-blue-700" },
-    disputed: { label: "Contestat", cls: "bg-red-100 text-red-700" },
-    snoozed: { label: "Amânat", cls: "bg-slate-100 text-slate-700" },
-  };
-  const m = map[status];
-  return <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${m.cls}`}>{m.label}</span>;
-}
-
-function NotificationItem({
-  notif,
-  onRead,
-  onOverride,
-  ctaRoute,
-}: {
-  notif: Notification;
-  onRead: (id: string) => void;
-  onOverride: (id: string, status: NotificationOverrideStatus, note?: string) => void;
-  ctaRoute?: string;
-}) {
-  const t = useTranslations();
-  const navigate = useNavigate();
-  const [disputeOpen, setDisputeOpen] = useState(false);
-  const [disputeText, setDisputeText] = useState("");
-
-  const priorityConfig = {
-    urgent: { badge: "urgent" as const, icon: <AlertTriangle className="w-5 h-5 text-red-600" />, bg: "bg-red-100", label: t.notifications.priority.urgent },
-    attention: { badge: "attention" as const, icon: <AlertTriangle className="w-5 h-5 text-amber-600" />, bg: "bg-amber-100", label: t.notifications.priority.attention },
-    info: { badge: "info" as const, icon: <Info className="w-5 h-5 text-blue-600" />, bg: "bg-blue-100", label: t.notifications.priority.info },
-  };
-
-  const config = priorityConfig[notif.priority];
-  const hasVerbs = (notif.verbs?.length ?? 0) > 0 && notif.overrideStatus === "pending";
-
-  return (
-    <div className={`rounded-2xl border p-4 transition-all ${notif.read ? "bg-white border-slate-100 opacity-80" : "bg-white border-slate-200 shadow-sm"}`}>
-      <div className="flex items-start gap-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${config.bg}`}>{config.icon}</div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            {!notif.read && <span className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0" aria-label="Unread" />}
-            <Badge variant={config.badge}>{config.label}</Badge>
-            {statusBadge(notif.overrideStatus)}
-            <span className="text-xs text-slate-400 ml-auto">{notif.date}</span>
-          </div>
-          <p className="font-semibold text-slate-900 text-sm">{notif.title}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{notif.source}</p>
-          <p className="text-xs text-slate-600 mt-1 leading-relaxed">{notif.message}</p>
-
-          {notif.proposedAction && (
-            <div className="mt-2 p-2 rounded-lg bg-blue-50 border border-blue-100">
-              <p className="text-[11px] uppercase tracking-wide font-semibold text-blue-700">Statul propune</p>
-              <p className="text-xs text-slate-700 mt-0.5">{notif.proposedAction}</p>
-              {notif.autoAcceptAt && (
-                <p className="text-[11px] text-blue-600 mt-1">⏳ Se acceptă automat pe {notif.autoAcceptAt}</p>
-              )}
-            </div>
-          )}
-
-          {hasVerbs && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {notif.verbs?.includes("accept") && (
-                <Button size="sm" onClick={() => onOverride(notif.id, "accepted")}>
-                  <CheckCircle className="w-3.5 h-3.5" /> Accept
-                </Button>
-              )}
-              {notif.verbs?.includes("change") && (
-                <Button variant="secondary" size="sm" onClick={() => { onOverride(notif.id, "changed", "Reprogramat din calendar"); navigate("/calendar"); }}>
-                  <CalIcon className="w-3.5 h-3.5" /> Schimbă data
-                </Button>
-              )}
-              {notif.verbs?.includes("snooze") && (
-                <Button variant="secondary" size="sm" onClick={() => onOverride(notif.id, "snoozed", "Amânat 7 zile")}>
-                  <Clock className="w-3.5 h-3.5" /> Amână 7z
-                </Button>
-              )}
-              {notif.verbs?.includes("dispute") && (
-                <Button variant="ghost" size="sm" onClick={() => setDisputeOpen((v) => !v)}>
-                  <Flag className="w-3.5 h-3.5" /> Contestă
-                </Button>
-              )}
-            </div>
-          )}
-
-          {disputeOpen && (
-            <div className="mt-3 p-3 rounded-lg bg-red-50 border border-red-100 space-y-2">
-              <textarea
-                value={disputeText}
-                onChange={(e) => setDisputeText(e.target.value)}
-                placeholder="Motivul contestației..."
-                className="w-full text-xs p-2 border border-red-200 rounded-md bg-white"
-                rows={2}
-              />
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => { onOverride(notif.id, "disputed", disputeText || "Contestat fără motiv"); setDisputeOpen(false); setDisputeText(""); }}>
-                  Trimite contestația
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setDisputeOpen(false)}>Anulează</Button>
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-2 mt-3">
-            {!notif.read && !hasVerbs && (
-              <Button variant="secondary" size="sm" onClick={() => onRead(notif.id)}>
-                <CheckCircle className="w-3.5 h-3.5" /> {t.actions.markRead}
-              </Button>
-            )}
-            {notif.cta && (
-              <Button variant="ghost" size="sm" onClick={() => ctaRoute && navigate(ctaRoute)}>
-                {notif.cta} <ChevronRight className="w-3.5 h-3.5" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function getCtaRoute(notif: Notification): string | undefined {
-  if (!notif.relatedEntityType) return undefined;
-  if (notif.relatedEntityType === "request") return "/requests";
-  if (notif.relatedEntityType === "document") return "/documents";
-  return undefined;
-}
-
-export function NotificationsScreen() {
-  const { state, dispatch, addLedgerEvent } = useApp();
-  const t = useTranslations();
-  const { showToast } = useToast();
-
-  const citizen = state.citizen;
-  if (!citizen) return null;
-
-  const isDelegate = state.currentRole === "delegate";
-  const activeDelegation = citizen.delegations.find((d) => d.status === "active");
-
-  const notifications = isDelegate && activeDelegation
-    ? citizen.notifications.filter((n) => {
-        if (activeDelegation.permissions.viewNotifications) return true;
-        return n.relatedEntityType === "request" && activeDelegation.permissions.trackRequests;
-      })
-    : citizen.notifications;
-
-  function markRead(id: string) {
-    dispatch({ type: "MARK_NOTIFICATION_READ", id });
-    addLedgerEvent("notification.read", `Notification marked read: ${id}`);
-  }
-
-  function applyOverride(id: string, status: import("../types").NotificationOverrideStatus, note?: string) {
-    dispatch({ type: "APPLY_NOTIFICATION_OVERRIDE", id, status, note });
-    addLedgerEvent("notification.override", `${id} → ${status}${note ? ` (${note})` : ""}`);
-    const labels: Record<string, string> = { accepted: "Acceptat", changed: "Reprogramat", disputed: "Contestație trimisă", snoozed: "Amânat 7 zile" };
-    showToast(labels[status] ?? "Actualizat", "success");
-  }
-
-
-  function markAllRead() {
-    dispatch({ type: "MARK_ALL_NOTIFICATIONS_READ" });
-    addLedgerEvent("notification.all_read", "All notifications marked as read");
-    showToast(t.notifications.allRead, "success");
-  }
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  return (
-    <div className="py-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t.notifications.title}</h1>
-          {unreadCount > 0 && (
-            <p className="text-sm text-slate-500 mt-0.5">{unreadCount} {t.notifications.unread}</p>
-          )}
-        </div>
-        {unreadCount > 0 && (
-          <Button variant="ghost" size="sm" onClick={markAllRead}>
-            {t.notifications.markAllRead}
-          </Button>
-        )}
-      </div>
-
-      {isDelegate && (
-        <p className="text-xs text-amber-600 font-medium">{t.notifications.delegateFilterNote}</p>
-      )}
-
-      <PhysicalPapersSection citizen={citizen} />
-
-      {notifications.length === 0 ? (
-        <div className="text-center py-16 text-slate-400">
-          <Bell className="w-12 h-12 mx-auto mb-3 opacity-40" />
-          <p className="text-sm">{t.notifications.noNotifications}</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {notifications.map((notif) => (
-            <NotificationItem
-              key={notif.id}
-              notif={notif}
-              onRead={markRead}
-              onOverride={applyOverride}
-              ctaRoute={getCtaRoute(notif)}
-            />
-          ))}
-        </div>
-      )}
-
-      <p className="text-center text-xs text-slate-400">{t.common.simulatedData}</p>
-    </div>
-  );
-}
+import type { Citizen, AppRequest, Document } from "../types";
 
 const REQUIRED_DOCS: Record<string, string[]> = {
   identity_renewal: [
@@ -251,13 +36,166 @@ const REQUIRED_DOCS: Record<string, string[]> = {
   ],
 };
 
-function PhysicalPapersSection({ citizen }: { citizen: import("../types").Citizen }) {
+type Tax = { id: string; label: string; institution: string; amount: string; dueDate: string; status: "due" | "overdue" | "paid" };
+
+function mockTaxes(): Tax[] {
+  return [
+    { id: "tax-1", label: "Impozit clădire 2026 — rata 1", institution: "Primăria Cluj-Napoca", amount: "184 RON", dueDate: "2026-06-30", status: "due" },
+    { id: "tax-2", label: "Impozit auto 2026", institution: "Primăria Cluj-Napoca", amount: "92 RON", dueDate: "2026-06-04", status: "due" },
+    { id: "tax-3", label: "Amenda circulație", institution: "IPJ Cluj", amount: "290 RON", dueDate: "2026-05-15", status: "overdue" },
+  ];
+}
+
+const SOURCES = [
+  { name: "ANAF", desc: "Taxe & impozite" },
+  { name: "DRPCIV", desc: "Permis & vehicule" },
+  { name: "DEPABD", desc: "CI / CEI" },
+  { name: "CNAS", desc: "Sănătate" },
+  { name: "Primărie", desc: "Taxe locale" },
+];
+
+export function NotificationsScreen() {
+  const { state } = useApp();
+  const t = useTranslations();
+  const navigate = useNavigate();
+  const citizen = state.citizen;
+  if (!citizen) return null;
+
+  const firstName = citizen.fullName.split(" ").pop() ?? citizen.fullName;
+  const taxes = mockTaxes();
+  const totalDue = taxes.filter((x) => x.status !== "paid").length;
+
+  const expiringSoon = citizen.documents
+    .filter((d) => d.daysUntilExpiry != null && d.daysUntilExpiry <= 90 && d.daysUntilExpiry >= -30)
+    .sort((a, b) => (a.daysUntilExpiry ?? 0) - (b.daysUntilExpiry ?? 0));
+
   const upcoming = citizen.requests
     .filter((r) => r.appointment && new Date(r.appointment.date) >= new Date(new Date().toDateString()))
     .sort((a, b) => (a.appointment!.date < b.appointment!.date ? -1 : 1));
 
-  if (upcoming.length === 0) return null;
+  return (
+    <div className="py-4 space-y-5">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Bună, {firstName}</h1>
+        <p className="text-sm text-slate-500 mt-1">Tot ce ai cu statul, într-un singur loc. Nu trebuie să cauți nimic.</p>
+        <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          Sincronizat acum din surse oficiale
+        </div>
+      </div>
 
+      {/* Sources strip */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <Database className="w-4 h-4 text-slate-500" />
+          <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Surse conectate</p>
+          <button className="ml-auto inline-flex items-center gap-1 text-xs text-blue-600 font-medium" onClick={() => location.reload()}>
+            <RefreshCw className="w-3.5 h-3.5" /> Reîmprospătează
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {SOURCES.map((s) => (
+            <span key={s.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="font-semibold">{s.name}</span>
+              <span className="text-slate-400">· {s.desc}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Papers to bring physically */}
+      {upcoming.length > 0 && (
+        <PhysicalPapers upcoming={upcoming} />
+      )}
+
+      {/* Taxes */}
+      <Section
+        icon={<CreditCard className="w-5 h-5 text-white" />}
+        color="bg-rose-600"
+        title="Taxe & impozite de plătit"
+        subtitle={`${totalDue} obligații aduse automat de la ANAF & Primărie`}
+        action={{ label: "Plătește tot", onClick: () => navigate("/requests") }}
+      >
+        <div className="divide-y divide-slate-100">
+          {taxes.map((tax) => (
+            <div key={tax.id} className="py-2.5 flex items-center gap-3">
+              <div className={`w-1.5 self-stretch rounded-full ${tax.status === "overdue" ? "bg-red-500" : "bg-amber-400"}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-900 truncate">{tax.label}</p>
+                <p className="text-xs text-slate-500">{tax.institution} · scadent {tax.dueDate}</p>
+              </div>
+              <p className={`text-sm font-bold ${tax.status === "overdue" ? "text-red-600" : "text-slate-900"}`}>{tax.amount}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* Documents */}
+      <Section
+        icon={<FileText className="w-5 h-5 text-white" />}
+        color="bg-blue-600"
+        title="Documente care expiră"
+        subtitle="Sincronizate din DEPABD, DRPCIV, CNAS, RAR"
+        action={{ label: "Vezi toate", onClick: () => navigate("/documents") }}
+      >
+        {expiringSoon.length === 0 ? (
+          <p className="text-sm text-slate-500 py-2">Toate documentele tale sunt la zi.</p>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {expiringSoon.map((doc) => <DocRow key={doc.id} doc={doc} onClick={() => navigate("/documents")} />)}
+          </div>
+        )}
+      </Section>
+
+      <p className="text-center text-xs text-slate-400">{t.common.simulatedData}</p>
+    </div>
+  );
+}
+
+function Section({
+  icon, color, title, subtitle, action, children,
+}: {
+  icon: React.ReactNode; color: string; title: string; subtitle?: string;
+  action?: { label: string; onClick: () => void }; children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="flex items-start gap-3 mb-2">
+        <div className={`w-9 h-9 rounded-xl ${color} grid place-items-center flex-shrink-0`}>{icon}</div>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-bold text-slate-900 text-sm">{title}</h2>
+          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+        </div>
+        {action && (
+          <button onClick={action.onClick} className="text-xs font-semibold text-blue-600 inline-flex items-center gap-0.5 flex-shrink-0">
+            {action.label} <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DocRow({ doc, onClick }: { doc: Document; onClick: () => void }) {
+  const days = doc.daysUntilExpiry ?? 0;
+  const tone = days < 0 ? "text-red-600" : days <= 30 ? "text-amber-600" : "text-slate-600";
+  const label = days < 0 ? `Expirat acum ${Math.abs(days)} zile` : `${days} zile rămase`;
+  return (
+    <button onClick={onClick} className="w-full py-2.5 flex items-center gap-3 text-left">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-slate-900 truncate">{doc.name}</p>
+        <p className="text-xs text-slate-500 truncate">{doc.institution}</p>
+      </div>
+      <span className={`text-xs font-semibold ${tone}`}>{label}</span>
+      <ChevronRight className="w-4 h-4 text-slate-300" />
+    </button>
+  );
+}
+
+function PhysicalPapers({ upcoming }: { upcoming: AppRequest[] }) {
   return (
     <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-4">
       <div className="flex items-center gap-2 mb-3">
@@ -266,7 +204,7 @@ function PhysicalPapersSection({ citizen }: { citizen: import("../types").Citize
         </div>
         <div>
           <h2 className="font-bold text-slate-900 text-sm">Acte de adus fizic la ghișeu</h2>
-          <p className="text-xs text-slate-500">Pregătește originalele înainte de programare</p>
+          <p className="text-xs text-slate-500">Pregătite automat pentru programările tale</p>
         </div>
       </div>
       <div className="space-y-3">
@@ -276,7 +214,7 @@ function PhysicalPapersSection({ citizen }: { citizen: import("../types").Citize
             <div key={r.id} className="bg-white rounded-xl p-3 border border-slate-100">
               <p className="text-sm font-semibold text-slate-900">{r.title}</p>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
-                <span className="inline-flex items-center gap-1"><CalIcon className="w-3.5 h-3.5" />{r.appointment!.date} · {r.appointment!.time}</span>
+                <span className="inline-flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" />{r.appointment!.date} · {r.appointment!.time}</span>
                 <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{r.appointment!.office}</span>
               </div>
               <ul className="mt-2 space-y-1">
