@@ -11,7 +11,6 @@ export function BottomNav() {
 
   const citizenLinks = [
     { to: "/notifications", icon: Home, label: t.nav.home, badge: unread },
-    { to: "/dashboard", icon: Bell, label: t.nav.notifications ?? "Notificări" },
     { to: "/calendar", icon: CalendarIcon, label: "Calendar" },
     { to: "/documents", icon: FileText, label: t.nav.documents },
     { to: "/profile", icon: User, label: t.nav.profile },
