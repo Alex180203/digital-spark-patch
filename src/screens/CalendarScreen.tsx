@@ -60,6 +60,9 @@ export function CalendarScreen() {
     expiry: true, appointment: true, deadline: true, payment: true,
   });
 
+  const autoPayEnabled = state.standingRules.find((r) => r.key === "auto_pay_local_taxes")?.enabled ?? false;
+  const autoAcceptAppts = state.standingRules.find((r) => r.key === "auto_accept_appointments")?.enabled ?? false;
+
   const events = useMemo<CalEvent[]>(() => {
     const c = state.citizen;
     if (!c) return [];
@@ -93,10 +96,12 @@ export function CalendarScreen() {
       }
     }
 
-    // Notification deadlines (auto-accept dates)
+    // Notification deadlines (auto-accept dates) — skip when the relevant standing rule handles them
     for (const n of c.notifications) {
-      if (!n.autoAcceptAt || n.overrideStatus && n.overrideStatus !== "pending") continue;
+      if (!n.autoAcceptAt || (n.overrideStatus && n.overrideStatus !== "pending")) continue;
       const isPayment = /plat|tax|ron/i.test(n.message + n.title);
+      if (isPayment && autoPayEnabled) continue;
+      if (!isPayment && autoAcceptAppts) continue;
       list.push({
         id: `not-${n.id}`,
         date: new Date(n.autoAcceptAt),
@@ -108,7 +113,7 @@ export function CalendarScreen() {
     }
 
     return list.sort((a, b) => a.date.getTime() - b.date.getTime());
-  }, [state.citizen]);
+  }, [state.citizen, autoPayEnabled, autoAcceptAppts]);
 
   const filtered = events.filter((e) => filters[e.kind]);
 

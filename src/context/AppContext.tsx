@@ -48,7 +48,7 @@ const initialState: AppState = {
   isAuthenticated: false,
   currentRole: "citizen",
   language: loadFromStorage<Language>("lazi_language", "ro"),
-  citizen: null,
+  citizen: loadFromStorage<typeof mockCitizen | null>("lazi_citizen", null),
   ledger: loadFromStorage<LedgerEvent[]>("lazi_ledger", []),
   highContrast: loadFromStorage<boolean>("lazi_hc", false),
   largeText: loadFromStorage<boolean>("lazi_lt", false),
@@ -64,15 +64,18 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         isAuthenticated: true,
         loginMethod: action.method,
-        citizen: {
-          ...mockCitizen,
-          loginMethod: action.method,
-        },
+        citizen: state.citizen
+          ? { ...state.citizen, loginMethod: action.method }
+          : { ...mockCitizen, loginMethod: action.method },
         currentRole: "citizen",
       };
     case "LOGOUT":
+      if (typeof window !== "undefined") {
+        try { window.localStorage.removeItem("lazi_citizen"); } catch { /* ignore */ }
+      }
       return {
         ...initialState,
+        citizen: null,
         language: state.language,
         ledger: state.ledger,
         highContrast: state.highContrast,
@@ -238,6 +241,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem("lazi_rules", JSON.stringify(state.standingRules));
   }, [state.standingRules]);
+
+  useEffect(() => {
+    if (state.citizen) {
+      localStorage.setItem("lazi_citizen", JSON.stringify(state.citizen));
+    }
+  }, [state.citizen]);
 
   const addLedgerEvent = useCallback(
     (action: string, payload: string) => {

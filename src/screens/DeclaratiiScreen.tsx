@@ -120,18 +120,22 @@ const TEMPLATES: FormTemplate[] = [
   },
 ];
 
-function FormView({ template, onSign }: { template: FormTemplate; onSign: (t: FormTemplate) => void }) {
+function FormView({ template, onSign, canSign }: { template: FormTemplate; onSign: (t: FormTemplate, ref: string) => void; canSign: boolean }) {
   const [fields, setFields] = useState(template.fields);
   const [editing, setEditing] = useState<string | null>(null);
   const [signed, setSigned] = useState(false);
+  const [refNumber, setRefNumber] = useState("");
 
   function update(id: string, value: string) {
     setFields((fs) => fs.map((f) => f.id === id ? { ...f, value, source: "editat manual" } : f));
   }
 
   function handleSign() {
+    if (!canSign) return;
+    const ref = `${template.key.toUpperCase()}-${Math.floor(Math.random() * 90000) + 10000}`;
+    setRefNumber(ref);
     setSigned(true);
-    onSign(template);
+    onSign(template, ref);
   }
 
   return (
@@ -172,11 +176,11 @@ function FormView({ template, onSign }: { template: FormTemplate; onSign: (t: Fo
                     />
                   ) : (
                     <button
-                      onClick={() => !signed && setEditing(f.id)}
+                      onClick={() => !signed && canSign && setEditing(f.id)}
                       className="mt-0.5 w-full text-left text-sm font-medium text-slate-900 flex items-center justify-between gap-2 group"
                     >
                       <span className="break-words">{f.value}</span>
-                      {!signed && <Pencil className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 shrink-0" />}
+                      {!signed && canSign && <Pencil className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-600 shrink-0" />}
                     </button>
                   )}
                 </div>
@@ -192,13 +196,13 @@ function FormView({ template, onSign }: { template: FormTemplate; onSign: (t: Fo
             <Check className="w-5 h-5" />
           </div>
           <div className="text-sm">
-            <div className="font-semibold text-emerald-900">Declarație trimisă · #{template.key.toUpperCase()}-{Math.floor(Math.random() * 90000) + 10000}</div>
+            <div className="font-semibold text-emerald-900">Declarație trimisă · #{refNumber}</div>
             <div className="text-xs text-emerald-700">Confirmare automată către {template.institution}.</div>
           </div>
         </div>
       ) : (
-        <Button fullWidth onClick={handleSign}>
-          <FileSignature className="w-4 h-4" /> Confirmă și semnează cu ROeID
+        <Button fullWidth onClick={handleSign} disabled={!canSign}>
+          <FileSignature className="w-4 h-4" /> {canSign ? "Confirmă și semnează cu ROeID" : "Doar cetățeanul poate semna"}
         </Button>
       )}
     </>
@@ -206,14 +210,16 @@ function FormView({ template, onSign }: { template: FormTemplate; onSign: (t: Fo
 }
 
 export function DeclaratiiScreen() {
-  const { addLedgerEvent } = useApp();
+  const { state, addLedgerEvent } = useApp();
   const { showToast } = useToast();
   const [activeKey, setActiveKey] = useState<string | null>(null);
+  const canSign = state.currentRole === "citizen";
 
   const active = TEMPLATES.find((t) => t.key === activeKey);
 
-  function onSign(t: FormTemplate) {
-    addLedgerEvent("declaration.signed", `${t.name} semnată (autocompletată de stat)`);
+  function onSign(t: FormTemplate, ref: string) {
+    if (!canSign) return;
+    addLedgerEvent("declaration.signed", `${t.name} semnată (ref ${ref}, autocompletată de stat)`);
     showToast(`${t.name} trimisă către ${t.institution}`, "success");
   }
 
@@ -272,7 +278,7 @@ export function DeclaratiiScreen() {
           >
             ← Înapoi la formulare
           </button>
-          <FormView template={active} onSign={onSign} />
+          <FormView template={active} onSign={onSign} canSign={canSign} />
         </>
       )}
 

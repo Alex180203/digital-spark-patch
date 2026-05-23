@@ -11,7 +11,17 @@ function simpleHash(input: string): string {
   return `sha256-sim:${hex}${hex}${hex}${hex}`;
 }
 
-let eventCounter = 1;
+function newId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return `evt-${crypto.randomUUID()}`;
+    }
+  } catch {
+    // fallthrough
+  }
+  // Fallback: timestamp + random suffix (collision-resistant enough for demo)
+  return `evt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 export function createLedgerEvent(
   actorId: string,
@@ -20,9 +30,11 @@ export function createLedgerEvent(
   payloadSummary: string,
   previousHash: string
 ): LedgerEvent {
-  const id = `evt-${String(eventCounter++).padStart(5, "0")}`;
+  const id = newId();
   const timestamp = new Date().toISOString();
-  const currentHash = simpleHash(`${id}${timestamp}${actorId}${action}${previousHash}`);
+  const currentHash = simpleHash(
+    `${id}|${timestamp}|${actorId}|${actorRole}|${action}|${payloadSummary}|${previousHash}`
+  );
 
   return {
     id,

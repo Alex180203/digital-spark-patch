@@ -151,7 +151,7 @@ function DelegationCard({
 }
 
 function CreateDelegationFlow({ onClose }: { onClose: () => void }) {
-  const { dispatch, addLedgerEvent } = useApp();
+  const { state, dispatch, addLedgerEvent } = useApp();
   const t = useTranslations();
   const { showToast } = useToast();
   const [step, setStep] = useState<CreateStep>(1);
@@ -260,6 +260,10 @@ function CreateDelegationFlow({ onClose }: { onClose: () => void }) {
   }
 
   async function handleCreateDelegation() {
+    if (state.currentRole !== "citizen") {
+      showToast("Doar cetățeanul poate crea delegări.", "error");
+      return;
+    }
     setLoading(true);
     await new Promise((r) => setTimeout(r, 800));
 
@@ -724,8 +728,13 @@ export function DelegationsScreen() {
   if (!citizen) return null;
 
   const isDelegate = state.currentRole === "delegate";
+  const isCitizen = state.currentRole === "citizen";
 
   function handleRevoke(id: string) {
+    if (!isCitizen) {
+      showToast("Doar cetățeanul poate revoca delegări.", "error");
+      return;
+    }
     dispatch({ type: "REVOKE_DELEGATION", delegationId: id });
     addLedgerEvent("delegation.revoked", `Delegare revocată: ${id}`);
     showToast("Delegare revocată cu succes.", "success");
@@ -742,7 +751,7 @@ export function DelegationsScreen() {
             {t.delegations.title}
           </p>
         </div>
-        {!isDelegate && (
+        {isCitizen && (
           <Button
             size="sm"
             onClick={() => setShowCreate(true)}
@@ -771,7 +780,7 @@ export function DelegationsScreen() {
             key={del.id}
             delegation={del}
             onRevoke={handleRevoke}
-            canRevoke={!isDelegate}
+            canRevoke={isCitizen}
           />
         ))}
         {citizen.delegations.length === 0 && (
