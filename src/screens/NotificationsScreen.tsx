@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Briefcase, CalendarDays, MapPin, CheckCircle, FileText, ChevronDown, ChevronUp,
   CreditCard, Database, ChevronRight, RefreshCw, ShieldCheck, Clock, X, Edit3, Sparkles,
+  Loader2, Radio,
 } from "lucide-react";
 import { useApp, useTranslations } from "../context/AppContext";
 import type { AppRequest, Document } from "../types";
+import { fetchAllTaxes, type AggregatedTaxes } from "../utils/mockGovApi";
 
 /**
  * Required & legal documents per Romanian legislation (sources noted).
