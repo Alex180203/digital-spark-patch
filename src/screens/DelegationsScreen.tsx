@@ -151,7 +151,7 @@ function DelegationCard({
 }
 
 function CreateDelegationFlow({ onClose }: { onClose: () => void }) {
-  const { dispatch, addLedgerEvent } = useApp();
+  const { state, dispatch, addLedgerEvent } = useApp();
   const t = useTranslations();
   const { showToast } = useToast();
   const [step, setStep] = useState<CreateStep>(1);
@@ -260,6 +260,10 @@ function CreateDelegationFlow({ onClose }: { onClose: () => void }) {
   }
 
   async function handleCreateDelegation() {
+    if (state.currentRole !== "citizen") {
+      showToast("Doar cetățeanul poate crea delegări.", "error");
+      return;
+    }
     setLoading(true);
     await new Promise((r) => setTimeout(r, 800));
 
