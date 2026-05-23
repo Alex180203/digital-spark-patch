@@ -196,6 +196,8 @@ export function NotificationsScreen() {
         <p className="text-xs text-amber-600 font-medium">{t.notifications.delegateFilterNote}</p>
       )}
 
+      <PhysicalPapersSection citizen={citizen} />
+
       {notifications.length === 0 ? (
         <div className="text-center py-16 text-slate-400">
           <Bell className="w-12 h-12 mx-auto mb-3 opacity-40" />
