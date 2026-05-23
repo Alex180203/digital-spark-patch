@@ -336,21 +336,45 @@ export function NotificationsScreen() {
           icon={<CreditCard className="w-5 h-5 text-white" />}
           color="bg-rose-600"
           title="Taxe & impozite de plătit"
-          subtitle={`${totalDue} obligații aduse automat de la ANAF & Primărie`}
+          subtitle={loadingTaxes
+            ? "Se interoghează ANAF, Ghișeul.ro, Primărie, DRPCIV, CNAS..."
+            : `${totalDue} obligații · ${totalAmount} RON · agregate din ${agg?.sources.filter(s=>s.taxes.length).length ?? 0} surse oficiale`}
           action={{ label: "Plătește tot", onClick: () => navigate("/requests") }}
         >
-          <div className="divide-y divide-slate-100">
-            {taxes.map((tax) => (
-              <div key={tax.id} className="py-2.5 flex items-center gap-3">
-                <div className={`w-1.5 self-stretch rounded-full ${tax.status === "overdue" ? "bg-red-500" : "bg-amber-400"}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">{tax.label}</p>
-                  <p className="text-xs text-slate-500">{tax.institution} · scadent {tax.dueDate}</p>
+          {loadingTaxes ? (
+            <div className="py-6 flex items-center justify-center gap-2 text-sm text-slate-500">
+              <Loader2 className="w-4 h-4 animate-spin" /> Sincronizare în paralel din 5 surse...
+            </div>
+          ) : taxes.length === 0 ? (
+            <p className="text-sm text-slate-500 py-2">Nu ai obligații neachitate. 🎉</p>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {taxes.map((tax) => (
+                <div key={tax.id} className="py-2.5 flex items-center gap-3">
+                  <div className={`w-1.5 self-stretch rounded-full ${tax.status === "overdue" ? "bg-red-500" : "bg-amber-400"}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900 truncate">{tax.label}</p>
+                    <p className="text-xs text-slate-500 truncate">
+                      {tax.institution} · scadent {tax.dueDate}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-semibold border border-blue-100">
+                        {tax.source}
+                      </span>
+                      {tax.legalRef && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-50 text-slate-500 text-[10px] border border-slate-200">
+                          {tax.legalRef}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className={`text-sm font-bold whitespace-nowrap ${tax.status === "overdue" ? "text-red-600" : "text-slate-900"}`}>
+                    {tax.amount} RON
+                  </p>
                 </div>
-                <p className={`text-sm font-bold ${tax.status === "overdue" ? "text-red-600" : "text-slate-900"}`}>{tax.amount}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Section>
       )}
 
