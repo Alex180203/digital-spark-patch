@@ -165,6 +165,8 @@ export function NotificationsScreen() {
     addLedgerEvent("notification.override", `${id} → ${status}${note ? ` (${note})` : ""}`);
     const labels: Record<string, string> = { accepted: "Acceptat", changed: "Reprogramat", disputed: "Contestație trimisă", snoozed: "Amânat 7 zile" };
     showToast(labels[status] ?? "Actualizat", "success");
+  }
+
 
   function markAllRead() {
     dispatch({ type: "MARK_ALL_NOTIFICATIONS_READ" });
