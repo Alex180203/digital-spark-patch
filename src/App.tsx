@@ -67,7 +67,7 @@ function AppRoutes() {
           <AppLayout />
         </ProtectedRoute>
       }>
-        <Route path="/notifications" element={<DashboardScreen />} />
+        <Route path="/dashboard" element={<DashboardScreen />} />
         <Route path="/documents" element={<DocumentsScreen />} />
         <Route path="/requests" element={<RequestsScreen />} />
         <Route path="/delegations" element={<DelegationsScreen />} />
