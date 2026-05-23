@@ -382,6 +382,10 @@ export function DocumentsScreen() {
   if (!citizen) return null;
 
   const handleDelete = (d: Document) => {
+    if (state.currentRole !== "citizen") {
+      showToast("Doar cetățeanul poate șterge documente.", "error");
+      return;
+    }
     dispatch({ type: "REMOVE_DOCUMENT", documentId: d.id });
     addLedgerEvent("document.removed", `Document șters: ${d.name}`);
     showToast(`${d.name} a fost șters`, "success");
