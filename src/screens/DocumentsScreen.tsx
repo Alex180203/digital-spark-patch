@@ -376,6 +376,7 @@ export function DocumentsScreen() {
   const { showToast } = useToast();
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [showAddDoc, setShowAddDoc] = useState(false);
+  const [showExpiry, setShowExpiry] = useState(false);
 
   const citizen = state.citizen;
   if (!citizen) return null;
