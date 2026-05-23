@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Briefcase, CalendarDays, MapPin, CheckCircle, FileText, ChevronDown, ChevronUp,
   CreditCard, Database, ChevronRight, RefreshCw, ShieldCheck, Clock, X, Edit3, Sparkles,
+  Loader2, Radio,
 } from "lucide-react";
 import { useApp, useTranslations } from "../context/AppContext";
 import type { AppRequest, Document } from "../types";
+import { fetchAllTaxes, type AggregatedTaxes } from "../utils/mockGovApi";
 
 /**
  * Required & legal documents per Romanian legislation (sources noted).
@@ -74,14 +76,6 @@ const LEGAL_DOCS: Record<string, { title: string; law: string; required: DocSpec
   },
 };
 
-type Tax = { id: string; label: string; institution: string; amount: string; dueDate: string; status: "due" | "overdue" | "paid" };
-function mockTaxes(): Tax[] {
-  return [
-    { id: "tax-1", label: "Impozit clădire 2026 — rata 1", institution: "Primăria Cluj-Napoca", amount: "184 RON", dueDate: "2026-06-30", status: "due" },
-    { id: "tax-2", label: "Impozit auto 2026", institution: "Primăria Cluj-Napoca", amount: "92 RON", dueDate: "2026-06-04", status: "due" },
-    { id: "tax-3", label: "Amenda circulație", institution: "IPJ Cluj", amount: "290 RON", dueDate: "2026-05-15", status: "overdue" },
-  ];
-}
 
 type ProposedAppointment = {
   id: string;
@@ -113,9 +107,10 @@ function mockProposed(citizenDocs: Document[]): ProposedAppointment[] {
   return proposals;
 }
 
-const SOURCES = [
+const SOURCES: { name: "ANAF" | "Ghișeul.ro" | "DRPCIV" | "DEPABD" | "CNAS" | "Primărie"; desc: string }[] = [
   { name: "ANAF", desc: "Taxe & impozite" },
-  { name: "DRPCIV", desc: "Permis & vehicule" },
+  { name: "Ghișeul.ro", desc: "Plăți consolidate" },
+  { name: "DRPCIV", desc: "Permis & amenzi" },
   { name: "DEPABD", desc: "CI / CEI" },
   { name: "CNAS", desc: "Sănătate" },
   { name: "Primărie", desc: "Taxe locale" },
@@ -129,6 +124,14 @@ export function NotificationsScreen() {
 
   const [decisions, setDecisions] = useState<Record<string, "accepted" | "declined" | undefined>>({});
   const [openLegal, setOpenLegal] = useState<string | null>(null);
+  const [agg, setAgg] = useState<AggregatedTaxes | null>(null);
+  const [loadingTaxes, setLoadingTaxes] = useState(true);
+
+  const reloadTaxes = React.useCallback(() => {
+    setLoadingTaxes(true);
+    fetchAllTaxes().then((r) => { setAgg(r); setLoadingTaxes(false); });
+  }, []);
+  useEffect(() => { reloadTaxes(); }, [reloadTaxes]);
 
   if (!citizen) return null;
 
@@ -136,8 +139,9 @@ export function NotificationsScreen() {
   const autoPayEnabled = state.standingRules.find((r) => r.key === "auto_pay_local_taxes")?.enabled ?? false;
   const autoAcceptEnabled = state.standingRules.find((r) => r.key === "auto_accept_appointments")?.enabled ?? false;
 
-  const taxes = autoPayEnabled ? [] : mockTaxes();
+  const taxes = autoPayEnabled ? [] : (agg?.taxes ?? []);
   const totalDue = taxes.filter((x) => x.status !== "paid").length;
+  const totalAmount = taxes.filter((x) => x.status !== "paid").reduce((s, x) => s + x.amount, 0);
 
   const proposed = mockProposed(citizen.documents).filter((p) => !decisions[p.id]);
 
@@ -161,24 +165,43 @@ export function NotificationsScreen() {
         </div>
       </div>
 
-      {/* Surse */}
+      {/* Surse — live mock API status */}
       <div className="rounded-2xl border border-slate-200 bg-white p-3">
         <div className="flex items-center gap-2 mb-2">
           <Database className="w-4 h-4 text-slate-500" />
           <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Surse conectate</p>
-          <button className="ml-auto inline-flex items-center gap-1 text-xs text-blue-600 font-medium" onClick={() => location.reload()}>
-            <RefreshCw className="w-3.5 h-3.5" /> Reîmprospătează
+          <button
+            disabled={loadingTaxes}
+            className="ml-auto inline-flex items-center gap-1 text-xs text-blue-600 font-medium disabled:opacity-50"
+            onClick={reloadTaxes}
+          >
+            {loadingTaxes ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            {loadingTaxes ? "Sincronizare..." : "Reîmprospătează"}
           </button>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {SOURCES.map((s) => (
-            <span key={s.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="font-semibold">{s.name}</span>
-              <span className="text-slate-400">· {s.desc}</span>
-            </span>
-          ))}
+          {SOURCES.map((s) => {
+            const live = agg?.sources.find((x) => x.source === s.name);
+            const ok = live?.ok ?? false;
+            return (
+              <span key={s.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-700" title={live?.endpoint}>
+                {loadingTaxes ? (
+                  <Loader2 className="w-2.5 h-2.5 animate-spin text-slate-400" />
+                ) : (
+                  <Radio className={`w-2.5 h-2.5 ${ok ? "text-emerald-500" : "text-slate-300"}`} />
+                )}
+                <span className="font-semibold">{s.name}</span>
+                <span className="text-slate-400">· {s.desc}</span>
+                {live && <span className="text-slate-400">· {live.latencyMs}ms</span>}
+              </span>
+            );
+          })}
         </div>
+        {agg && (
+          <p className="text-[10px] text-slate-400 mt-2 font-mono">
+            GET /aggregator/v1/citizen/me · {agg.sources.length} surse · {agg.taxes.length} obligații
+          </p>
+        )}
       </div>
 
       {/* Proposed appointments — lazy citizen flow */}
@@ -314,21 +337,45 @@ export function NotificationsScreen() {
           icon={<CreditCard className="w-5 h-5 text-white" />}
           color="bg-rose-600"
           title="Taxe & impozite de plătit"
-          subtitle={`${totalDue} obligații aduse automat de la ANAF & Primărie`}
+          subtitle={loadingTaxes
+            ? "Se interoghează ANAF, Ghișeul.ro, Primărie, DRPCIV, CNAS..."
+            : `${totalDue} obligații · ${totalAmount} RON · agregate din ${agg?.sources.filter(s=>s.taxes.length).length ?? 0} surse oficiale`}
           action={{ label: "Plătește tot", onClick: () => navigate("/requests") }}
         >
-          <div className="divide-y divide-slate-100">
-            {taxes.map((tax) => (
-              <div key={tax.id} className="py-2.5 flex items-center gap-3">
-                <div className={`w-1.5 self-stretch rounded-full ${tax.status === "overdue" ? "bg-red-500" : "bg-amber-400"}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">{tax.label}</p>
-                  <p className="text-xs text-slate-500">{tax.institution} · scadent {tax.dueDate}</p>
+          {loadingTaxes ? (
+            <div className="py-6 flex items-center justify-center gap-2 text-sm text-slate-500">
+              <Loader2 className="w-4 h-4 animate-spin" /> Sincronizare în paralel din 5 surse...
+            </div>
+          ) : taxes.length === 0 ? (
+            <p className="text-sm text-slate-500 py-2">Nu ai obligații neachitate. 🎉</p>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {taxes.map((tax) => (
+                <div key={tax.id} className="py-2.5 flex items-center gap-3">
+                  <div className={`w-1.5 self-stretch rounded-full ${tax.status === "overdue" ? "bg-red-500" : "bg-amber-400"}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900 truncate">{tax.label}</p>
+                    <p className="text-xs text-slate-500 truncate">
+                      {tax.institution} · scadent {tax.dueDate}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-semibold border border-blue-100">
+                        {tax.source}
+                      </span>
+                      {tax.legalRef && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-50 text-slate-500 text-[10px] border border-slate-200">
+                          {tax.legalRef}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className={`text-sm font-bold whitespace-nowrap ${tax.status === "overdue" ? "text-red-600" : "text-slate-900"}`}>
+                    {tax.amount} RON
+                  </p>
                 </div>
-                <p className={`text-sm font-bold ${tax.status === "overdue" ? "text-red-600" : "text-slate-900"}`}>{tax.amount}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Section>
       )}
 
