@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Outlet, NavLink } from "react-router-dom";
-import { Home, FileText, ClipboardList, Users, User, Building2, Hash, FileSignature, Calendar, Sparkles, Bell } from "lucide-react";
+import { Home, FileText, ClipboardList, Users, User, Building2, Hash, FileSignature, Calendar, Sparkles, Bell, Receipt } from "lucide-react";
 import { TopBar } from "./TopBar";
 import { BottomNav } from "./BottomNav";
 import { useApp, useTranslations } from "../../context/AppContext";
