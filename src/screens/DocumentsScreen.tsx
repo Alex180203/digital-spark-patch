@@ -440,9 +440,23 @@ export function DocumentsScreen() {
         )}
       </div>
 
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-slate-500">{docs.length} documente</p>
+        <button
+          onClick={() => setShowExpiry((v) => !v)}
+          className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+            showExpiry
+              ? "bg-blue-600 text-white border-blue-600"
+              : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+          }`}
+        >
+          {showExpiry ? "Ascunde datele de expirare" : "Arată datele de expirare"}
+        </button>
+      </div>
+
       <div className="space-y-3">
         {docs.map((doc) => (
-          <DocumentCard key={doc.id} doc={doc} onOpen={setSelectedDoc} />
+          <DocumentCard key={doc.id} doc={doc} onOpen={setSelectedDoc} showExpiry={showExpiry} />
         ))}
       </div>
 
