@@ -27,8 +27,9 @@ type Action =
   | { type: "APPLY_NOTIFICATION_OVERRIDE"; id: string; status: NotificationOverrideStatus; note?: string };
 
 function loadFromStorage<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
   try {
-    const v = localStorage.getItem(key);
+    const v = window.localStorage.getItem(key);
     return v ? JSON.parse(v) : fallback;
   } catch {
     return fallback;
