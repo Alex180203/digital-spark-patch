@@ -7,7 +7,7 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { LandingScreen } from "./screens/LandingScreen";
 import { LoginRoeIdScreen } from "./screens/LoginRoeIdScreen";
 import { LoginCeiNfcScreen } from "./screens/LoginCeiNfcScreen";
-import { DashboardScreen } from "./screens/DashboardScreen";
+
 import { DocumentsScreen } from "./screens/DocumentsScreen";
 import { RequestsScreen } from "./screens/RequestsScreen";
 import { DelegationsScreen } from "./screens/DelegationsScreen";
