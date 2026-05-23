@@ -160,6 +160,12 @@ export function NotificationsScreen() {
     addLedgerEvent("notification.read", `Notification marked read: ${id}`);
   }
 
+  function applyOverride(id: string, status: import("../types").NotificationOverrideStatus, note?: string) {
+    dispatch({ type: "APPLY_NOTIFICATION_OVERRIDE", id, status, note });
+    addLedgerEvent("notification.override", `${id} → ${status}${note ? ` (${note})` : ""}`);
+    const labels: Record<string, string> = { accepted: "Acceptat", changed: "Reprogramat", disputed: "Contestație trimisă", snoozed: "Amânat 7 zile" };
+    showToast(labels[status] ?? "Actualizat", "success");
+
   function markAllRead() {
     dispatch({ type: "MARK_ALL_NOTIFICATIONS_READ" });
     addLedgerEvent("notification.all_read", "All notifications marked as read");
@@ -200,6 +206,7 @@ export function NotificationsScreen() {
               key={notif.id}
               notif={notif}
               onRead={markRead}
+              onOverride={applyOverride}
               ctaRoute={getCtaRoute(notif)}
             />
           ))}
