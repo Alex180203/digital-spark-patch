@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider, useApp } from "./context/AppContext";
 import { ToastProvider } from "./components/ui/Toast";
 import { AppLayout } from "./components/layout/AppLayout";
@@ -84,9 +84,9 @@ export default function App() {
   return (
     <AppProvider>
       <ToastProvider>
-        <BrowserRouter>
+        <HashRouter>
           <AppRoutes />
-        </BrowserRouter>
+        </HashRouter>
       </ToastProvider>
     </AppProvider>
   );
