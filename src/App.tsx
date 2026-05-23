@@ -16,6 +16,8 @@ import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { LedgerScreen } from "./screens/LedgerScreen";
 import { IdRenewalScreen } from "./screens/IdRenewalScreen";
 import { ClerkScreen } from "./screens/ClerkScreen";
+import { DeclaratiiScreen } from "./screens/DeclaratiiScreen";
+import { CalendarScreen } from "./screens/CalendarScreen";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { state } = useApp();
@@ -71,6 +73,8 @@ function AppRoutes() {
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/notifications" element={<NotificationsScreen />} />
         <Route path="/ledger" element={<LedgerScreen />} />
+        <Route path="/declaratii" element={<DeclaratiiScreen />} />
+        <Route path="/calendar" element={<CalendarScreen />} />
         <Route path="/id-renewal" element={<CitizenOnlyRoute><IdRenewalScreen /></CitizenOnlyRoute>} />
         <Route path="/clerk" element={<ClerkOnlyRoute><ClerkScreen /></ClerkOnlyRoute>} />
       </Route>
