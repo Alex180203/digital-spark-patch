@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Lock, Hash } from "lucide-react";
+import { Shield, Lock, Hash, AlertTriangle } from "lucide-react";
 import { useApp, useTranslations } from "../context/AppContext";
 
 function truncateHash(hash: string) {
@@ -40,6 +40,13 @@ export function LedgerScreen() {
           <h1 className="text-2xl font-bold text-slate-900">{t.ledger.title}</h1>
           <p className="text-xs text-slate-500">{ledger.length} {t.ledger.eventsCount}</p>
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 flex items-start gap-2">
+        <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-800 leading-relaxed">
+          This is a non-verifiable client-side demo ledger. Hashes are simulated and stored only in your browser — they are not cryptographically anchored or independently auditable.
+        </p>
       </div>
 
       <div className="bg-slate-800 rounded-2xl p-4 space-y-2">
