@@ -107,9 +107,10 @@ function mockProposed(citizenDocs: Document[]): ProposedAppointment[] {
   return proposals;
 }
 
-const SOURCES = [
+const SOURCES: { name: "ANAF" | "Ghișeul.ro" | "DRPCIV" | "DEPABD" | "CNAS" | "Primărie"; desc: string }[] = [
   { name: "ANAF", desc: "Taxe & impozite" },
-  { name: "DRPCIV", desc: "Permis & vehicule" },
+  { name: "Ghișeul.ro", desc: "Plăți consolidate" },
+  { name: "DRPCIV", desc: "Permis & amenzi" },
   { name: "DEPABD", desc: "CI / CEI" },
   { name: "CNAS", desc: "Sănătate" },
   { name: "Primărie", desc: "Taxe locale" },
