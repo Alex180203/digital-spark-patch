@@ -72,6 +72,8 @@ export interface AppRequest {
   updatedAt: string;
 }
 
+export type NotificationOverrideStatus = "pending" | "accepted" | "changed" | "disputed" | "snoozed";
+
 export interface Notification {
   id: string;
   source: string;
@@ -83,6 +85,28 @@ export interface Notification {
   relatedEntityType?: "document" | "request" | "delegation";
   relatedEntityId?: string;
   cta?: string;
+  /** What the state will do automatically if the citizen does nothing. */
+  proposedAction?: string;
+  /** ISO date by which auto-accept will trigger. */
+  autoAcceptAt?: string;
+  /** Verbs the citizen can use to override. */
+  verbs?: Array<"accept" | "change" | "dispute" | "snooze">;
+  overrideStatus?: NotificationOverrideStatus;
+  overrideNote?: string;
+}
+
+export type StandingRuleKey =
+  | "auto_pay_local_taxes"
+  | "auto_renew_documents"
+  | "auto_accept_appointments"
+  | "auto_sign_declarations"
+  | "auto_accept_deliveries";
+
+export interface StandingRule {
+  key: StandingRuleKey;
+  enabled: boolean;
+  cap?: number;
+  note?: string;
 }
 
 export interface Delegation {
@@ -156,4 +180,5 @@ export interface AppState {
   largeText: boolean;
   loginMethod: "roeid" | "ceiNfc" | null;
   notificationPreference: NotificationPreference;
+  standingRules: StandingRule[];
 }

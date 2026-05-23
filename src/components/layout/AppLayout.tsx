@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Outlet, NavLink } from "react-router-dom";
-import { Home, FileText, ClipboardList, Users, User, Building2, Hash, FileSignature, Calendar } from "lucide-react";
+import { Home, FileText, ClipboardList, Users, User, Building2, Hash, FileSignature, Calendar, Sparkles } from "lucide-react";
 import { TopBar } from "./TopBar";
 import { BottomNav } from "./BottomNav";
 import { useApp, useTranslations } from "../../context/AppContext";
@@ -16,6 +16,7 @@ function DesktopSideNav() {
     { to: "/declaratii", icon: FileSignature, label: "Declarații" },
     { to: "/calendar", icon: Calendar, label: "Calendar" },
     { to: "/requests", icon: ClipboardList, label: t.nav.requests },
+    { to: "/rules", icon: Sparkles, label: "Reguli auto" },
     { to: "/delegations", icon: Users, label: t.nav.delegations },
     { to: "/profile", icon: User, label: t.nav.profile },
   ];
