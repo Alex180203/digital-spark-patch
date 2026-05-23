@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Outlet, NavLink } from "react-router-dom";
-import { Home, FileText, ClipboardList, Users, User, Building2, Hash, FileSignature, Calendar, Sparkles } from "lucide-react";
+import { Home, FileText, ClipboardList, Users, User, Building2, Hash, FileSignature, Calendar, Sparkles, Bell } from "lucide-react";
 import { TopBar } from "./TopBar";
 import { BottomNav } from "./BottomNav";
 import { useApp, useTranslations } from "../../context/AppContext";
@@ -9,17 +9,19 @@ function DesktopSideNav() {
   const { state } = useApp();
   const t = useTranslations();
   const isClerk = state.currentRole === "clerk";
+  const unread = state.citizen?.notifications.filter((n) => !n.read).length ?? 0;
 
   const citizenLinks = [
+    { to: "/notifications", icon: Bell, label: "Notificări", badge: unread },
     { to: "/dashboard", icon: Home, label: t.nav.home },
+    { to: "/calendar", icon: Calendar, label: "Calendar" },
     { to: "/documents", icon: FileText, label: t.nav.documents },
     { to: "/declaratii", icon: FileSignature, label: "Declarații" },
-    { to: "/calendar", icon: Calendar, label: "Calendar" },
     { to: "/requests", icon: ClipboardList, label: t.nav.requests },
     { to: "/rules", icon: Sparkles, label: "Reguli auto" },
     { to: "/delegations", icon: Users, label: t.nav.delegations },
     { to: "/profile", icon: User, label: t.nav.profile },
-  ];
+  ] as Array<{ to: string; icon: typeof Home; label: string; badge?: number }>;
 
   const clerkLinks = [
     { to: "/clerk", icon: Building2, label: t.common.roles.clerk },
