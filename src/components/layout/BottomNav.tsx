@@ -32,7 +32,7 @@ export function BottomNav() {
       aria-label={t.nav.home}
     >
       <div className="flex">
-        {links.map(({ to, icon: Icon, label }) => (
+        {links.map(({ to, icon: Icon, label, badge }) => (
           <NavLink
             key={to}
             to={to}
@@ -47,7 +47,14 @@ export function BottomNav() {
           >
             {({ isActive }) => (
               <>
-                <Icon className={`w-5 h-5 ${isActive ? "stroke-2" : "stroke-[1.5]"}`} />
+                <div className="relative">
+                  <Icon className={`w-5 h-5 ${isActive ? "stroke-2" : "stroke-[1.5]"}`} />
+                  {badge && badge > 0 ? (
+                    <span className="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold grid place-items-center">
+                      {badge > 9 ? "9+" : badge}
+                    </span>
+                  ) : null}
+                </div>
                 <span>{label}</span>
               </>
             )}
