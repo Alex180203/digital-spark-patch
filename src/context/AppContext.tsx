@@ -64,15 +64,18 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         isAuthenticated: true,
         loginMethod: action.method,
-        citizen: {
-          ...mockCitizen,
-          loginMethod: action.method,
-        },
+        citizen: state.citizen
+          ? { ...state.citizen, loginMethod: action.method }
+          : { ...mockCitizen, loginMethod: action.method },
         currentRole: "citizen",
       };
     case "LOGOUT":
+      if (typeof window !== "undefined") {
+        try { window.localStorage.removeItem("lazi_citizen"); } catch { /* ignore */ }
+      }
       return {
         ...initialState,
+        citizen: null,
         language: state.language,
         ledger: state.ledger,
         highContrast: state.highContrast,
